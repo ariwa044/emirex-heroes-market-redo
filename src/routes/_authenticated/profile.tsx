@@ -1,0 +1,21 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { CheckCircle2 } from "lucide-react";
+import { AccountShell } from "@/components/account-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/_authenticated/profile")({
+  head: () => ({ meta: [{ title: "Profile | HeroesMarkets" }, { name: "description", content: "Manage your HeroesMarkets profile." }, { property: "og:title", content: "Profile | HeroesMarkets" }, { property: "og:description", content: "Manage your HeroesMarkets profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  component: ProfilePage,
+});
+
+function ProfilePage() {
+  const { user } = Route.useRouteContext();
+  const [displayName, setDisplayName] = useState(""); const [country, setCountry] = useState(""); const [currency, setCurrency] = useState("USD"); const [message, setMessage] = useState(""); const [saving, setSaving] = useState(false);
+  useEffect(() => { supabase.from("profiles").select("display_name,country,preferred_currency").eq("user_id", user.id).maybeSingle().then(({ data }) => { if (data) { setDisplayName(data.display_name); setCountry(data.country ?? ""); setCurrency(data.preferred_currency); } }); }, [user.id]);
+  async function save(event: FormEvent) { event.preventDefault(); setSaving(true); setMessage(""); const { error } = await supabase.from("profiles").upsert({ user_id: user.id, display_name: displayName, country: country || null, preferred_currency: currency }); setSaving(false); setMessage(error ? error.message : "Profile saved."); }
+  return <AccountShell eyebrow="Settings" title="Profile"><div className="grid gap-3 lg:grid-cols-[1.4fr_0.8fr]"><form onSubmit={save} className="rounded-2xl border border-border bg-card p-6"><h2 className="font-head text-xl font-semibold">Personal details</h2><p className="mt-2 text-sm text-muted-foreground">Keep your account information current.</p><div className="mt-6 grid gap-5 sm:grid-cols-2"><div className="space-y-2 sm:col-span-2"><Label htmlFor="email">Email</Label><Input id="email" value={user.email ?? ""} disabled className="h-11" /></div><div className="space-y-2"><Label htmlFor="name">Display name</Label><Input id="name" value={displayName} onChange={(e)=>setDisplayName(e.target.value)} className="h-11" /></div><div className="space-y-2"><Label htmlFor="country">Country</Label><Input id="country" value={country} onChange={(e)=>setCountry(e.target.value)} className="h-11" /></div><div className="space-y-2"><Label htmlFor="currency">Preferred currency</Label><Input id="currency" value={currency} onChange={(e)=>setCurrency(e.target.value.toUpperCase())} maxLength={3} className="h-11" /></div></div>{message && <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-4 text-positive" />{message}</p>}<Button className="mt-6" disabled={saving}>{saving ? "Saving…" : "Save profile"}</Button></form><aside className="rounded-2xl border border-border bg-card p-6"><p className="text-[11px] uppercase tracking-[0.18em] text-signal">Account security</p><h2 className="mt-3 font-head text-xl font-semibold">Protected by design</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Your account session and personal details are encrypted and scoped only to you.</p></aside></div></AccountShell>;
+}
