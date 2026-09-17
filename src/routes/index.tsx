@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, ChevronRight, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
 import tradingRoom from "../assets/trading-control-room.jpg";
 
@@ -72,8 +72,8 @@ function Index() {
           <a className="transition-colors hover:text-foreground" href="#trust">Why Heroes</a>
         </nav>
         <div className="flex items-center gap-2">
-          <a className="hidden h-9 items-center px-4 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex" href="https://www.heroesmarket.life/login">Log in</a>
-          <a className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85" href="https://www.heroesmarket.life/register">Open account <ArrowRight className="size-3.5" /></a>
+          <Link className="hidden h-9 items-center px-4 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex" to="/auth">Log in</Link>
+          <Link className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85" to="/auth">Open account <ArrowRight className="size-3.5" /></Link>
         </div>
       </header>
 
@@ -86,8 +86,8 @@ function Index() {
               <p className="mt-5 max-w-[46ch] text-sm leading-6 text-muted-foreground">Forex, crypto, commodities, stocks and indexes — one disciplined workspace built for serious trading.</p>
             </div>
             <div className="flex flex-wrap gap-2 pt-8">
-              <a className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85" href="https://www.heroesmarket.life/register">Open account <ArrowRight className="size-4" /></a>
-              <a className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm font-medium transition-colors hover:bg-accent" href="https://www.heroesmarket.life/login">Log in to trade</a>
+              <Link className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85" to="/auth">Open account <ArrowRight className="size-4" /></Link>
+              <Link className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm font-medium transition-colors hover:bg-accent" to="/auth">Log in to trade</Link>
             </div>
           </section>
 
@@ -114,11 +114,11 @@ function Index() {
 
           <section id="markets" className="col-span-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {markets.map(([code, name, detail]) => (
-              <a key={name} href="https://www.heroesmarket.life/register" className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-signal/50">
+            <Link key={name} to="/auth" className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-signal/50">
                 <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-signal-soft font-head text-xs font-semibold text-signal">{code}</span>
                 <span className="min-w-0 flex-1"><b className="block font-head text-sm font-semibold">{name}</b><small className="mt-1 block text-xs text-muted-foreground">{detail}</small></span>
                 <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-signal" />
-              </a>
+            </Link>
             ))}
           </section>
 
@@ -152,7 +152,7 @@ function Index() {
 
           <section className="col-span-12 flex flex-col items-start justify-between gap-5 rounded-2xl bg-primary p-7 text-primary-foreground sm:flex-row sm:items-center lg:p-9">
             <div><h2 className="max-w-[26ch] font-head text-2xl font-semibold text-balance">Your next market move starts here.</h2><p className="mt-2 text-sm text-primary-foreground/75">Open an account and step into the control room.</p></div>
-            <a className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-foreground px-6 text-sm font-semibold text-background transition-transform hover:-translate-y-0.5" href="https://www.heroesmarket.life/register">Open account <ArrowRight className="size-4" /></a>
+            <Link className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-foreground px-6 text-sm font-semibold text-background transition-transform hover:-translate-y-0.5" to="/auth">Open account <ArrowRight className="size-4" /></Link>
           </section>
         </div>
       </main>
