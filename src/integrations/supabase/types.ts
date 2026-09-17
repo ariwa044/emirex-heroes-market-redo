@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      investment_plans: {
+        Row: {
+          created_at: string
+          description: string
+          duration_days: number
+          id: string
+          max_amount: number | null
+          min_amount: number
+          name: string
+          roi_percent: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          duration_days: number
+          id?: string
+          max_amount?: number | null
+          min_amount: number
+          name: string
+          roi_percent: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration_days?: number
+          id?: string
+          max_amount?: number | null
+          min_amount?: number
+          name?: string
+          roi_percent?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          amount: number
+          created_at: string
+          ends_at: string | null
+          expected_return: number
+          id: string
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          ends_at?: string | null
+          expected_return?: number
+          id?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          ends_at?: string | null
+          expected_return?: number
+          id?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "investment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -90,6 +176,42 @@ export type Database = {
           quantity?: number
           side?: string
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          note: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string
+          note?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          note?: string | null
+          status?: string
+          type?: string
           updated_at?: string
           user_id?: string
         }

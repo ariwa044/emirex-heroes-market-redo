@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { BarChart3, History, LogOut, UserRound } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, BarChart3, History, Layers, LogOut, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
   { to: "/dashboard" as const, label: "Overview", icon: BarChart3 },
+  { to: "/deposit" as const, label: "Deposit", icon: ArrowDownToLine },
+  { to: "/withdraw" as const, label: "Withdraw", icon: ArrowUpFromLine },
+  { to: "/plans" as const, label: "Invest / Plans", icon: Layers },
   { to: "/history" as const, label: "Trading history", icon: History },
   { to: "/profile" as const, label: "Profile", icon: UserRound },
 ];
