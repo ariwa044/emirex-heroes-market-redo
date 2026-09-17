@@ -41,7 +41,7 @@ export function AccountShell({ title, eyebrow, children }: { title: string; eyeb
       <div className="mx-auto grid max-w-[1440px] md:grid-cols-[230px_1fr]">
         <aside className="border-b border-border p-4 md:min-h-[calc(100vh-4rem)] md:border-b-0 md:border-r md:p-6">
           <nav className="flex gap-2 overflow-x-auto md:flex-col" aria-label="Account navigation">
-            {nav.map(({ to, label, icon: Icon }) => <Link key={to} to={to} activeProps={{ className: "bg-primary text-primary-foreground" }} inactiveProps={{ className: "text-muted-foreground hover:bg-accent hover:text-foreground" }} className="flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"><Icon className="size-4" />{label}</Link>)}
+            {items.map(({ to, label, icon: Icon }) => <Link key={to} to={to} activeProps={{ className: "bg-primary text-primary-foreground" }} inactiveProps={{ className: "text-muted-foreground hover:bg-accent hover:text-foreground" }} className="flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"><Icon className="size-4" />{label}</Link>)}
           </nav>
         </aside>
         <main className="min-w-0 p-4 sm:p-6 lg:p-9">
