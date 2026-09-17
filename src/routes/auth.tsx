@@ -83,8 +83,13 @@ function AuthPage() {
       const profileError = await ensureProfile(data.user);
       if (profileError) return setMessage(profileError.code === "23505" ? "That username is already taken." : profileError.message);
     }
-    if (!data.session) setMessage("Check your email to confirm your account, then log in.");
-    else await navigate({ to: "/dashboard", replace: true });
+    if (!data.session) {
+      setMessage("Your account was created. Log in to continue.");
+      setMode("login");
+      return;
+    }
+    sessionStorage.setItem("heroes-welcome", values.fullName);
+    await navigate({ to: "/dashboard", replace: true });
   }
 
   async function googleSignIn() {
