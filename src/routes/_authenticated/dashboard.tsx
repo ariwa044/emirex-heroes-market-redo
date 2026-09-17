@@ -4,6 +4,10 @@ import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, History, Layers, Wallet
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { accruedProfit } from "@/lib/investment";
+
+type LiveRow = { amount: number; status: string; started_at: string; ends_at: string | null; plan_id: string };
+type PlanRow = { id: string; roi_percent: number; duration_days: number };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | HeroesMarkets" }, { name: "description", content: "Your HeroesMarkets account overview." }, { property: "og:title", content: "Dashboard | HeroesMarkets" }, { property: "og:description", content: "Your HeroesMarkets account overview." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -15,25 +19,34 @@ function DashboardPage() {
   const [tradeCount, setTradeCount] = useState(0);
   const [profit, setProfit] = useState(0);
   const [welcomeName, setWelcomeName] = useState("");
-  const [balance, setBalance] = useState(0);
+  const [cash, setCash] = useState(0);
   const [invested, setInvested] = useState(0);
+  const [live, setLive] = useState<{ rows: LiveRow[]; plans: PlanRow[] }>({ rows: [], plans: [] });
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   useEffect(() => { supabase.from("trading_history").select("profit_loss").eq("user_id", user.id).then(({ data }) => { setTradeCount(data?.length ?? 0); setProfit(data?.reduce((sum, row) => sum + (row.profit_loss ?? 0), 0) ?? 0); }); }, [user.id]);
   useEffect(() => {
     void (async () => {
-      const [{ data: tx }, { data: inv }] = await Promise.all([
+      const [{ data: tx }, { data: inv }, { data: pl }] = await Promise.all([
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
-        supabase.from("investments").select("amount").eq("user_id", user.id).eq("status", "active"),
+        supabase.from("investments").select("amount,status,started_at,ends_at,plan_id").eq("user_id", user.id),
+        supabase.from("investment_plans").select("id,roi_percent,duration_days"),
       ]);
-      const active = (inv ?? []).reduce((sum, row) => sum + Number(row.amount), 0);
-      const cash = (tx ?? []).reduce((sum, row) => {
+      const rows = ((inv ?? []) as LiveRow[]);
+      const active = rows.filter((r) => r.status === "active").reduce((sum, row) => sum + Number(row.amount), 0);
+      const money = (tx ?? []).reduce((sum, row) => {
         if (row.status === "rejected") return sum;
         if (row.type === "deposit") return row.status === "completed" ? sum + Number(row.amount) : sum;
         return sum - Number(row.amount);
       }, 0);
       setInvested(active);
-      setBalance(cash - active);
+      setCash(money);
+      setLive({ rows, plans: ((pl ?? []) as PlanRow[]) });
     })();
   }, [user.id]);
+  const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now), 0);
+  const balance = cash - invested + livePl;
+  const totalPl = profit + livePl;
   useEffect(() => {
     const name = sessionStorage.getItem("heroes-welcome");
     if (!name) return;
