@@ -54,7 +54,7 @@ function Index() {
     <div id="top" className="min-h-screen overflow-hidden bg-background font-body text-foreground antialiased">
       <div className="border-b border-border bg-card/60">
         <div className="ticker flex w-max items-center gap-9 py-2 text-[10px] font-medium uppercase tracking-[0.18em]">
-          {[...quotes, ...quotes].map(([name, value, change], index) => (
+          {[...quotes, ...quotes].map(([name = "", value = "", change = ""], index) => (
             <span key={`${name}-${index}`} className="flex gap-2 text-muted-foreground">
               {name} <b className="text-foreground">{value}</b>
               <em className={change.startsWith("+") ? "not-italic text-positive" : "not-italic text-signal"}>{change}</em>
