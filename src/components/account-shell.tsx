@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowDownToLine, ArrowUpFromLine, BarChart3, History, Layers, LogOut, UserRound } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, BarChart3, History, Layers, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/hooks/use-admin";
 import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
@@ -17,6 +18,10 @@ const nav = [
 export function AccountShell({ title, eyebrow, children }: { title: string; eyebrow: string; children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string>();
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id)); }, []);
+  const isAdmin = useIsAdmin(userId);
+  const items = isAdmin ? [...nav, { to: "/admin" as const, label: "Admin", icon: ShieldCheck }] : nav;
 
   async function signOut() {
     await queryClient.cancelQueries();
