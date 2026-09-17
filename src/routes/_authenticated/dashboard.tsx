@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, History, WalletCards } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ArrowUpRight, History, Layers, WalletCards } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,25 @@ function DashboardPage() {
   const [tradeCount, setTradeCount] = useState(0);
   const [profit, setProfit] = useState(0);
   const [welcomeName, setWelcomeName] = useState("");
+  const [balance, setBalance] = useState(0);
+  const [invested, setInvested] = useState(0);
   useEffect(() => { supabase.from("trading_history").select("profit_loss").eq("user_id", user.id).then(({ data }) => { setTradeCount(data?.length ?? 0); setProfit(data?.reduce((sum, row) => sum + (row.profit_loss ?? 0), 0) ?? 0); }); }, [user.id]);
+  useEffect(() => {
+    void (async () => {
+      const [{ data: tx }, { data: inv }] = await Promise.all([
+        supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
+        supabase.from("investments").select("amount").eq("user_id", user.id).eq("status", "active"),
+      ]);
+      const active = (inv ?? []).reduce((sum, row) => sum + Number(row.amount), 0);
+      const cash = (tx ?? []).reduce((sum, row) => {
+        if (row.status === "rejected") return sum;
+        if (row.type === "deposit") return row.status === "completed" ? sum + Number(row.amount) : sum;
+        return sum - Number(row.amount);
+      }, 0);
+      setInvested(active);
+      setBalance(cash - active);
+    })();
+  }, [user.id]);
   useEffect(() => {
     const name = sessionStorage.getItem("heroes-welcome");
     if (!name) return;
