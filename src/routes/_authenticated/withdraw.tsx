@@ -19,7 +19,7 @@ function WithdrawPage() {
   const { user } = Route.useRouteContext();
   const [amount, setAmount] = useState("");
   const [destination, setDestination] = useState("");
-  const [method, setMethod] = useState("bank_transfer");
+  const method = "crypto";
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [balance, setBalance] = useState(0);
@@ -64,16 +64,9 @@ function WithdrawPage() {
           <Input id="wamount" inputMode="decimal" placeholder="250" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="mt-5 space-y-2">
-          <Label htmlFor="destination">Pay out to</Label>
-          <Input id="destination" placeholder="Bank account or wallet address" value={destination} onChange={(e) => setDestination(e.target.value)} />
-        </div>
-        <div className="mt-5 space-y-2">
-          <Label>Method</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {[["bank_transfer", "Bank transfer"], ["crypto", "Crypto"]].map(([id, label]) => (
-              <button type="button" key={id} onClick={() => setMethod(id!)} className={`rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${method === id ? "border-signal bg-signal-soft" : "border-border hover:bg-accent"}`}>{label}</button>
-            ))}
-          </div>
+          <Label htmlFor="destination">Your BTC wallet address</Label>
+          <Input id="destination" placeholder="Bitcoin wallet address" value={destination} onChange={(e) => setDestination(e.target.value)} />
+          <p className="text-xs text-muted-foreground">Payouts are sent in Bitcoin only. Double-check the address before submitting.</p>
         </div>
         <Button type="submit" className="mt-6 w-full" disabled={busy}>{busy ? "Submitting…" : "Request withdrawal"}</Button>
       </form>

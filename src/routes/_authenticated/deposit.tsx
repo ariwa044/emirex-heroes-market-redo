@@ -13,18 +13,14 @@ export const Route = createFileRoute("/_authenticated/deposit")({
   component: DepositPage,
 });
 
-const methods = [
-  { id: "bank_transfer", label: "Bank transfer", copy: "1-2 business days" },
-  { id: "card", label: "Debit / credit card", copy: "Instant" },
-  { id: "crypto", label: "Crypto (BTC / USDT)", copy: "After 2 confirmations" },
-];
+const BTC_ADDRESS = "1b4oTt9vYJpq2SaNMZRahbDaU3FQMePUg";
 
 type Row = { id: string; type: string; amount: number; method: string; status: string; created_at: string };
 
 function DepositPage() {
   const { user } = Route.useRouteContext();
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("bank_transfer");
+  const method = "crypto";
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
 
@@ -52,21 +48,18 @@ function DepositPage() {
       <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-6">
         <ArrowDownToLine className="text-signal" />
         <h2 className="mt-4 font-head text-xl font-semibold">Add money to your account</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Minimum deposit $50. Funds appear once the payment clears.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Bitcoin only. Minimum deposit $50. Funds appear after 2 network confirmations.</p>
         <div className="mt-6 space-y-2">
           <Label htmlFor="amount">Amount (USD)</Label>
           <Input id="amount" inputMode="decimal" placeholder="500" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="mt-5 space-y-2">
-          <Label>Payment method</Label>
-          <div className="grid gap-2">
-            {methods.map((m) => (
-              <button type="button" key={m.id} onClick={() => setMethod(m.id)} className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors ${method === m.id ? "border-signal bg-signal-soft" : "border-border hover:bg-accent"}`}>
-                <span className="font-medium">{m.label}</span>
-                <span className="text-xs text-muted-foreground">{m.copy}</span>
-              </button>
-            ))}
+          <Label>Send BTC to this address</Label>
+          <div className="rounded-xl border border-signal bg-signal-soft px-4 py-3">
+            <p className="break-all font-mono text-sm">{BTC_ADDRESS}</p>
+            <button type="button" onClick={() => { void navigator.clipboard.writeText(BTC_ADDRESS); toast.success("BTC address copied."); }} className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-signal">Copy address</button>
           </div>
+          <p className="text-xs text-muted-foreground">Send only BTC to this address. Submit the form after sending so we can match your payment.</p>
         </div>
         <Button type="submit" className="mt-6 w-full" disabled={busy}>{busy ? "Submitting…" : "Deposit now"}</Button>
       </form>
