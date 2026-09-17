@@ -33,8 +33,8 @@ function AuthPage() {
 
   async function ensureProfile(user: { id: string; user_metadata?: Record<string, unknown> }) {
     const metadata = user.user_metadata ?? {};
-    const metadataUsername = typeof metadata.username === "string" ? metadata.username : null;
-    const metadataFullName = typeof metadata.full_name === "string" ? metadata.full_name : "";
+    const metadataUsername = typeof metadata["username"] === "string" ? metadata["username"] : null;
+    const metadataFullName = typeof metadata["full_name"] === "string" ? metadata["full_name"] : "";
     if (!metadataUsername) return null;
     const { error } = await supabase.from("profiles").upsert({
       user_id: user.id,
@@ -56,7 +56,7 @@ function AuthPage() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
       if (error) return setMessage(error.message);
       if (data.user) {
