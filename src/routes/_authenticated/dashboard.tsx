@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { accruedProfit } from "@/lib/investment";
 
-type LiveRow = { amount: number; status: string; started_at: string; ends_at: string | null; plan_id: string };
+type LiveRow = { amount: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null };
 type PlanRow = { id: string; roi_percent: number; duration_days: number };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -29,7 +29,7 @@ function DashboardPage() {
     void (async () => {
       const [{ data: tx }, { data: inv }, { data: pl }] = await Promise.all([
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
-        supabase.from("investments").select("amount,status,started_at,ends_at,plan_id").eq("user_id", user.id),
+        supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override").eq("user_id", user.id),
         supabase.from("investment_plans").select("id,roi_percent,duration_days"),
       ]);
       const rows = ((inv ?? []) as LiveRow[]);

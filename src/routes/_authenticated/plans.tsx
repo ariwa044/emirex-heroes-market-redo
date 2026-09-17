@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/plans")({
 });
 
 type Plan = { id: string; name: string; description: string; min_amount: number; max_amount: number | null; roi_percent: number; duration_days: number };
-type Investment = { id: string; amount: number; expected_return: number; status: string; started_at: string; ends_at: string | null; plan_id: string };
+type Investment = { id: string; amount: number; expected_return: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null };
 
 function PlansPage() {
   const { user } = Route.useRouteContext();
@@ -34,7 +34,7 @@ function PlansPage() {
   async function load() {
     const [{ data: p }, { data: inv }] = await Promise.all([
       supabase.from("investment_plans").select("id,name,description,min_amount,max_amount,roi_percent,duration_days").order("sort_order"),
-      supabase.from("investments").select("id,amount,expected_return,status,started_at,ends_at,plan_id").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("investments").select("id,amount,expected_return,status,started_at,ends_at,plan_id,profit_override").eq("user_id", user.id).order("created_at", { ascending: false }),
     ]);
     setPlans((p as Plan[]) ?? []);
     setInvestments((inv as Investment[]) ?? []);

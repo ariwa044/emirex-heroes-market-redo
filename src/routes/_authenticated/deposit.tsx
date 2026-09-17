@@ -7,18 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { useBtcAddress } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/_authenticated/deposit")({
   head: () => ({ meta: [{ title: "Deposit funds | HeroesMarkets" }, { name: "description", content: "Fund your HeroesMarkets trading account." }, { property: "og:title", content: "Deposit funds | HeroesMarkets" }, { property: "og:description", content: "Fund your HeroesMarkets trading account." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: DepositPage,
 });
 
-const BTC_ADDRESS = "1b4oTt9vYJpq2SaNMZRahbDaU3FQMePUg";
-
 type Row = { id: string; type: string; amount: number; method: string; status: string; created_at: string };
 
 function DepositPage() {
   const { user } = Route.useRouteContext();
+  const BTC_ADDRESS = useBtcAddress();
   const [amount, setAmount] = useState("");
   const method = "crypto";
   const [busy, setBusy] = useState(false);
