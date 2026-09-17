@@ -13,11 +13,7 @@ export const Route = createFileRoute("/_authenticated/deposit")({
   component: DepositPage,
 });
 
-const methods = [
-  { id: "bank_transfer", label: "Bank transfer", copy: "1-2 business days" },
-  { id: "card", label: "Debit / credit card", copy: "Instant" },
-  { id: "crypto", label: "Crypto (BTC / USDT)", copy: "After 2 confirmations" },
-];
+const BTC_ADDRESS = "1b4oTt9vYJpq2SaNMZRahbDaU3FQMePUg";
 
 type Row = { id: string; type: string; amount: number; method: string; status: string; created_at: string };
 
