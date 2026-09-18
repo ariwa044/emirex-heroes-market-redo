@@ -34,12 +34,6 @@ const markets = [
   ["SP", "Stocks & Indexes", "9,000+ global instruments"],
 ];
 
-const stats = [
-  ["12ms", "Average execution", "Order fills across 40+ liquidity pools."],
-  ["12,400", "Active instruments", "Five global asset classes in one account."],
-  ["$4.2B", "Client assets held", "Segregated, ring-fenced and audited."],
-];
-
 function Brand() {
   return (
     <a href="#top" className="flex items-center gap-2.5" aria-label="HeroesMarkets home">
