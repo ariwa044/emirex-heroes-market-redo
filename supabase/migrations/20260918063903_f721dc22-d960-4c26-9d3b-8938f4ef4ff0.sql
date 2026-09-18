@@ -1,0 +1,1 @@
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS withdrawal_paused boolean NOT NULL DEFAULT false;
