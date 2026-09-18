@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ShieldCheck, Wallet } from "lucide-react";
+import { ArrowUpFromLine, ShieldCheck, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Profile = { user_id: string; display_name: string; username: string | null };
-type Tx = { user_id: string; type: string; amount: number; status: string };
+type Tx = { id: string; user_id: string; type: string; amount: number; status: string; withdrawal_progress: number; created_at: string };
 type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null };
 type Plan = { id: string; name: string; roi_percent: number; duration_days: number };
 
@@ -31,6 +31,7 @@ function AdminPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [balanceDraft, setBalanceDraft] = useState<Record<string, string>>({});
   const [profitDraft, setProfitDraft] = useState<Record<string, string>>({});
+  const [withdrawalDraft, setWithdrawalDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -41,7 +42,7 @@ function AdminPage() {
     const [{ data: s }, { data: p }, { data: t }, { data: i }, { data: pl }] = await Promise.all([
       supabase.from("site_settings").select("value").eq("key", "btc_address").maybeSingle(),
       supabase.from("profiles").select("user_id,display_name,username"),
-      supabase.from("transactions").select("user_id,type,amount,status"),
+      supabase.from("transactions").select("id,user_id,type,amount,status,withdrawal_progress,created_at"),
       supabase.from("investments").select("id,user_id,plan_id,amount,status,started_at,ends_at,profit_override"),
       supabase.from("investment_plans").select("id,name,roi_percent,duration_days").order("sort_order"),
     ]);
@@ -117,6 +118,20 @@ function AdminPage() {
     void load();
   }
 
+  async function setWithdrawalProgress(tx: Tx) {
+    const value = Number(withdrawalDraft[tx.id] ?? tx.withdrawal_progress);
+    if (!Number.isInteger(value) || value < 0 || value > 100) { toast.error("Enter a whole number from 0 to 100."); return; }
+    setBusy(true);
+    const { error } = await supabase.from("transactions").update({ withdrawal_progress: value }).eq("id", tx.id).eq("type", "withdrawal");
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(value === 100 ? "Withdrawal completed." : `Withdrawal progress set to ${value}%.`);
+    setWithdrawalDraft((drafts) => ({ ...drafts, [tx.id]: "" }));
+    void load();
+  }
+
+  const withdrawals = txs.filter((tx) => tx.type === "withdrawal" && tx.status !== "rejected").sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+
   return <AccountShell eyebrow="Control" title="Admin console">
     <section className="rounded-2xl border border-signal/40 bg-signal-soft p-6">
       <Wallet className="text-signal" />
@@ -129,6 +144,36 @@ function AdminPage() {
         </div>
         <Button onClick={() => void saveAddress()} disabled={busy}>Save address</Button>
       </div>
+    </section>
+
+    <section className="mt-3 rounded-2xl border border-border bg-card p-6">
+      <ArrowUpFromLine className="text-signal" />
+      <h2 className="mt-4 font-head text-xl font-semibold">Withdrawal progress</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Update each payout from 0 to 100. At 100%, it is marked completed automatically.</p>
+      {withdrawals.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">No withdrawal requests yet.</p> : <ul className="mt-5 space-y-3">
+        {withdrawals.map((tx) => {
+          const member = profiles.find((profile) => profile.user_id === tx.user_id);
+          return <li key={tx.id} className="rounded-lg border border-border p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-medium">{member?.display_name || member?.username || "Member"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">${Number(tx.amount).toFixed(2)} · {new Date(tx.created_at).toLocaleString()}</p>
+              </div>
+              <span className="text-xs font-semibold uppercase text-muted-foreground">{tx.status}</span>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Withdrawal progress ${tx.withdrawal_progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={tx.withdrawal_progress}>
+                <div className="h-full rounded-full bg-positive transition-[width] duration-500" style={{ width: `${tx.withdrawal_progress}%` }} />
+              </div>
+              <span className="w-10 text-right text-xs font-semibold tabular-nums">{tx.withdrawal_progress}%</span>
+            </div>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Input type="number" min={0} max={100} step={1} aria-label="Withdrawal progress percentage" placeholder={String(tx.withdrawal_progress)} value={withdrawalDraft[tx.id] ?? ""} onChange={(event) => setWithdrawalDraft((drafts) => ({ ...drafts, [tx.id]: event.target.value }))} />
+              <Button variant="outline" onClick={() => void setWithdrawalProgress(tx)} disabled={busy}>Update progress</Button>
+            </div>
+          </li>;
+        })}
+      </ul>}
     </section>
 
     <section className="mt-3 rounded-2xl border border-border bg-card p-6">

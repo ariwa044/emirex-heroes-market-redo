@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
   component: WithdrawPage,
 });
 
-type Row = { id: string; type: string; amount: number; method: string; status: string; created_at: string };
+type Row = { id: string; type: string; amount: number; method: string; status: string; created_at: string; withdrawal_progress: number };
 
 function WithdrawPage() {
   const { user } = Route.useRouteContext();
@@ -27,7 +27,7 @@ function WithdrawPage() {
   async function load() {
     const [{ data: all }, { data: mine }] = await Promise.all([
       supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
-      supabase.from("transactions").select("id,type,amount,method,status,created_at").eq("user_id", user.id).eq("type", "withdrawal").order("created_at", { ascending: false }).limit(8),
+      supabase.from("transactions").select("id,type,amount,method,status,created_at,withdrawal_progress").eq("user_id", user.id).eq("type", "withdrawal").order("created_at", { ascending: false }).limit(8),
     ]);
     const total = (all ?? []).reduce((sum, row) => {
       if (row.status === "rejected") return sum;
@@ -73,9 +73,17 @@ function WithdrawPage() {
       <section className="rounded-2xl border border-border bg-card p-6">
         <h2 className="font-head text-xl font-semibold">Recent withdrawals</h2>
         {rows.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No withdrawals yet.</p> : <ul className="mt-4 divide-y divide-border">
-          {rows.map((row) => <li key={row.id} className="flex items-center justify-between py-3 text-sm">
-            <div><p className="font-medium">${Number(row.amount).toFixed(2)}</p><p className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString()} · {row.method.replace("_", " ")}</p></div>
-            <span className="rounded-full border border-border px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted-foreground">{row.status}</span>
+          {rows.map((row) => <li key={row.id} className="py-4 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div><p className="font-medium">${Number(row.amount).toFixed(2)}</p><p className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString()} · {row.method.replace("_", " ")}</p></div>
+              <span className="rounded-full border border-border px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted-foreground">{row.status}</span>
+            </div>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Withdrawal progress ${row.withdrawal_progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={row.withdrawal_progress}>
+                <div className="h-full rounded-full bg-positive transition-[width] duration-500" style={{ width: `${row.withdrawal_progress}%` }} />
+              </div>
+              <span className="w-10 text-right text-xs font-semibold tabular-nums">{row.withdrawal_progress}%</span>
+            </div>
           </li>)}
         </ul>}
       </section>
