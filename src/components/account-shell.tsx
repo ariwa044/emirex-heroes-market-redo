@@ -23,13 +23,13 @@ export function AccountShell({ title, eyebrow, children }: { title: string; eyeb
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id)); }, []);
   const isAdmin = useIsAdmin(userId);
   const items = isAdmin ? [...nav, { to: "/admin" as const, label: "Admin", icon: ShieldCheck }] : nav;
-  const [locked, setLocked] = useState(false);
+  const [lockReason, setLockReason] = useState<"upgrade" | "hold" | null>(null);
   useEffect(() => {
-    if (!userId || isAdmin) { setLocked(false); return; }
+    if (!userId || isAdmin) { setLockReason(null); return; }
     let active = true;
     const check = async () => {
-      const { data } = await supabase.from("profiles").select("upgrade_required").eq("user_id", userId).maybeSingle();
-      if (active) setLocked(Boolean(data?.upgrade_required));
+      const { data } = await supabase.from("profiles").select("upgrade_required,account_on_hold").eq("user_id", userId).maybeSingle();
+      if (active) setLockReason(data?.account_on_hold ? "hold" : data?.upgrade_required ? "upgrade" : null);
     };
     void check();
     const id = setInterval(() => void check(), 8000);
@@ -63,7 +63,7 @@ export function AccountShell({ title, eyebrow, children }: { title: string; eyeb
           <div className="mt-7">{children}</div>
         </main>
       </div>
-      {locked && <AccountLock />}
+      {lockReason && <AccountLock reason={lockReason} />}
     </div>
   );
 }
