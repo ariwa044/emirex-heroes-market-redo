@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/use-admin";
+import { AccountLock } from "@/components/account-lock";
 import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
@@ -22,6 +23,18 @@ export function AccountShell({ title, eyebrow, children }: { title: string; eyeb
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id)); }, []);
   const isAdmin = useIsAdmin(userId);
   const items = isAdmin ? [...nav, { to: "/admin" as const, label: "Admin", icon: ShieldCheck }] : nav;
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    if (!userId || isAdmin) { setLocked(false); return; }
+    let active = true;
+    const check = async () => {
+      const { data } = await supabase.from("profiles").select("upgrade_required").eq("user_id", userId).maybeSingle();
+      if (active) setLocked(Boolean(data?.upgrade_required));
+    };
+    void check();
+    const id = setInterval(() => void check(), 8000);
+    return () => { active = false; clearInterval(id); };
+  }, [userId, isAdmin]);
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -50,6 +63,7 @@ export function AccountShell({ title, eyebrow, children }: { title: string; eyeb
           <div className="mt-7">{children}</div>
         </main>
       </div>
+      {locked && <AccountLock />}
     </div>
   );
 }
