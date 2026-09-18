@@ -105,6 +105,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_on_hold: boolean
           avatar_url: string | null
           country: string | null
           created_at: string
@@ -116,6 +117,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          account_on_hold?: boolean
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -127,6 +129,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          account_on_hold?: boolean
           avatar_url?: string | null
           country?: string | null
           created_at?: string
