@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpFromLine, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowUpFromLine, Pause, Play, ShieldCheck, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -169,17 +169,21 @@ function AdminPage() {
                 <p className="font-medium">{member?.display_name || member?.username || "Member"}</p>
                 <p className="mt-1 text-xs text-muted-foreground">${Number(tx.amount).toFixed(2)} · {new Date(tx.created_at).toLocaleString()}</p>
               </div>
-              <span className="text-xs font-semibold uppercase text-muted-foreground">{tx.status}</span>
+              <span className="text-xs font-semibold uppercase text-muted-foreground">{tx.withdrawal_paused ? "paused" : tx.status}</span>
             </div>
             <div className="mt-4 flex items-center gap-3">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Withdrawal progress ${tx.withdrawal_progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={tx.withdrawal_progress}>
-                <div className="h-full rounded-full bg-positive transition-[width] duration-500" style={{ width: `${tx.withdrawal_progress}%` }} />
+                <div className={`h-full rounded-full transition-[width] duration-500 ${tx.withdrawal_paused ? "bg-signal" : "bg-positive"}`} style={{ width: `${tx.withdrawal_progress}%` }} />
               </div>
               <span className="w-10 text-right text-xs font-semibold tabular-nums">{tx.withdrawal_progress}%</span>
             </div>
+            {tx.withdrawal_paused && <p className="mt-3 rounded-lg border border-signal/50 bg-signal-soft p-3 text-xs">Member sees: “An upgrade is needed to process the withdrawal. Please reach out to customer support for assistance.”</p>}
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <Input type="number" min={0} max={100} step={1} aria-label="Withdrawal progress percentage" placeholder={String(tx.withdrawal_progress)} value={withdrawalDraft[tx.id] ?? ""} onChange={(event) => setWithdrawalDraft((drafts) => ({ ...drafts, [tx.id]: event.target.value }))} />
               <Button variant="outline" onClick={() => void setWithdrawalProgress(tx)} disabled={busy}>Update progress</Button>
+              <Button variant={tx.withdrawal_paused ? "default" : "ghost"} onClick={() => void toggleWithdrawalPause(tx)} disabled={busy}>
+                {tx.withdrawal_paused ? <><Play className="mr-2 size-4" />Resume</> : <><Pause className="mr-2 size-4" />Pause</>}
+              </Button>
             </div>
           </li>;
         })}
