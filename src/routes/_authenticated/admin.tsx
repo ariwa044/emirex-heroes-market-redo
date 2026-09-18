@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Profile = { user_id: string; display_name: string; username: string | null };
+type Profile = { user_id: string; display_name: string; username: string | null; upgrade_required: boolean };
 type Tx = { id: string; user_id: string; type: string; amount: number; status: string; withdrawal_progress: number; withdrawal_paused: boolean; created_at: string };
 type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null };
 type Plan = { id: string; name: string; roi_percent: number; duration_days: number };
@@ -41,7 +41,7 @@ function AdminPage() {
   const load = useCallback(async () => {
     const [{ data: s }, { data: p }, { data: t }, { data: i }, { data: pl }] = await Promise.all([
       supabase.from("site_settings").select("value").eq("key", "btc_address").maybeSingle(),
-      supabase.from("profiles").select("user_id,display_name,username"),
+      supabase.from("profiles").select("user_id,display_name,username,upgrade_required"),
       supabase.from("transactions").select("id,user_id,type,amount,status,withdrawal_progress,withdrawal_paused,created_at"),
       supabase.from("investments").select("id,user_id,plan_id,amount,status,started_at,ends_at,profit_override"),
       supabase.from("investment_plans").select("id,name,roi_percent,duration_days").order("sort_order"),
@@ -71,6 +71,16 @@ function AdminPage() {
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Website wallet address updated.");
+  }
+
+  async function toggleUpgrade(p: Profile) {
+    const next = !p.upgrade_required;
+    setBusy(true);
+    const { error } = await supabase.from("profiles").update({ upgrade_required: next }).eq("user_id", p.user_id);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? "Upgrade warning shown — account locked." : "Account activated.");
+    await load();
   }
 
   function cashFor(userId: string) {
@@ -218,6 +228,13 @@ function AdminPage() {
                 <Input id={`bal-${p.user_id}`} inputMode="decimal" placeholder={cash.toFixed(2)} value={balanceDraft[p.user_id] ?? ""} onChange={(e) => setBalanceDraft((d) => ({ ...d, [p.user_id]: e.target.value }))} />
               </div>
               <Button variant="outline" onClick={() => void setBalance(p.user_id)} disabled={busy}>Update balance</Button>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button variant={p.upgrade_required ? "default" : "outline"} onClick={() => void toggleUpgrade(p)} disabled={busy}>
+                {p.upgrade_required ? "Activate account" : "Upgrade"}
+              </Button>
+              {p.upgrade_required && <span className="text-xs text-signal">Account locked — upgrade warning shown to this member.</span>}
             </div>
 
             {rows.length > 0 && <div className="mt-5 space-y-3">

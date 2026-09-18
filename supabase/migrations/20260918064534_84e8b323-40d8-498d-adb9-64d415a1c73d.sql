@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS upgrade_required boolean NOT NULL DEFAULT false;

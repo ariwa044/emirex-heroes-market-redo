@@ -111,6 +111,7 @@ export type Database = {
           display_name: string
           preferred_currency: string
           updated_at: string
+          upgrade_required: boolean
           user_id: string
           username: string | null
         }
@@ -121,6 +122,7 @@ export type Database = {
           display_name?: string
           preferred_currency?: string
           updated_at?: string
+          upgrade_required?: boolean
           user_id: string
           username?: string | null
         }
@@ -131,6 +133,7 @@ export type Database = {
           display_name?: string
           preferred_currency?: string
           updated_at?: string
+          upgrade_required?: boolean
           user_id?: string
           username?: string | null
         }
