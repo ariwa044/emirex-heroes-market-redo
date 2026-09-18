@@ -73,6 +73,16 @@ function AdminPage() {
     toast.success("Website wallet address updated.");
   }
 
+  async function toggleUpgrade(p: Profile) {
+    const next = !p.upgrade_required;
+    setBusy(true);
+    const { error } = await supabase.from("profiles").update({ upgrade_required: next }).eq("user_id", p.user_id);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? "Upgrade warning shown — account locked." : "Account activated.");
+    await load();
+  }
+
   function cashFor(userId: string) {
     return cashFromTransactions(txs.filter((t) => t.user_id === userId));
   }
