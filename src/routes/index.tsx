@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, ChevronRight, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
 import tradingRoom from "../assets/trading-control-room.jpg";
+import tradingFloorAsset from "../assets/heroes-trading-floor.jpg.asset.json";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,12 +32,6 @@ const markets = [
   ["₿", "Crypto", "240 spot & futures pairs"],
   ["AU", "Commodities", "Metals, energy & agriculture"],
   ["SP", "Stocks & Indexes", "9,000+ global instruments"],
-];
-
-const stats = [
-  ["12ms", "Average execution", "Order fills across 40+ liquidity pools."],
-  ["12,400", "Active instruments", "Five global asset classes in one account."],
-  ["$4.2B", "Client assets held", "Segregated, ring-fenced and audited."],
 ];
 
 function Brand() {
@@ -79,38 +75,35 @@ function Index() {
 
       <main className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-6">
         <div className="grid grid-cols-12 gap-3">
-          <section className="col-span-12 flex min-h-[340px] flex-col justify-between rounded-2xl border border-border bg-card p-6 lg:col-span-5 lg:p-8">
-            <div>
-              <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-signal"><span className="pulse-dot size-1.5 rounded-full bg-signal" /> Live execution</span>
-              <h1 className="mt-5 max-w-[18ch] font-head text-4xl font-semibold leading-[1.02] text-balance sm:text-5xl">Trade the world&apos;s markets with terminal-grade precision.</h1>
-              <p className="mt-5 max-w-[46ch] text-sm leading-6 text-muted-foreground">Forex, crypto, commodities, stocks and indexes — one disciplined workspace built for serious trading.</p>
+          <section id="platform" className="col-span-12 overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="relative h-[260px] sm:h-[360px] lg:h-[430px]">
+              <img src={tradingFloorAsset.url} alt="Professional traders monitoring global markets" width={1320} height={640} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/15 to-transparent" />
+              <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-md border border-border bg-background/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-signal backdrop-blur-sm">
+                <span className="pulse-dot size-1.5 rounded-full bg-signal" /> Live market access
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 pt-8">
-              <Link className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85" to="/auth">Open account <ArrowRight className="size-4" /></Link>
-              <Link className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm font-medium transition-colors hover:bg-accent" to="/auth">Log in to trade</Link>
+
+            <div className="grid gap-10 px-5 pb-8 pt-2 sm:px-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-end lg:px-12 lg:pb-12">
+              <div>
+                <h1 className="max-w-[15ch] font-head text-5xl font-semibold leading-[1.05] text-balance sm:text-6xl lg:text-7xl">Get more <span className="text-signal">freedom</span> in the markets.</h1>
+                <p className="mt-6 max-w-[52ch] text-base leading-7 text-muted-foreground sm:text-lg">Trade cryptocurrencies, stock indexes, commodities and Forex with a wide spread. Experience seamless trading with low commissions.</p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg" className="h-12 px-7 text-base"><Link to="/auth">Login Account <ArrowRight /></Link></Button>
+                  <Button asChild size="lg" variant="secondary" className="h-12 px-7 text-base"><Link to="/auth">Open Account</Link></Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 border-t border-border pt-7 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+                {[["50K+", "Active traders"], ["$2B+", "Daily volume"], ["99.9%", "Uptime"]].map(([value, label]) => (
+                  <div key={label} className="min-w-0 border-r border-border px-3 first:pl-0 last:border-r-0 last:pr-0">
+                    <p className="font-head text-2xl font-semibold sm:text-3xl">{value}</p>
+                    <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
-
-          <section id="platform" className="col-span-12 flex min-h-[340px] flex-col rounded-2xl border border-border bg-card p-5 lg:col-span-7 lg:p-6">
-            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-muted-foreground"><span>BTC/USD · 1H</span><span>Last <b className="ml-2 text-foreground">$67,204.20</b></span></div>
-            <div className="chart-grid relative mt-4 flex-1 overflow-hidden rounded-xl border border-border/60 bg-background/45">
-              <div className="absolute left-5 top-5"><p className="font-head text-2xl font-semibold">$67,204.20</p><p className="mt-1 text-xs text-positive">+$1,241.62 today</p></div>
-              <svg viewBox="0 0 700 240" className="absolute inset-x-0 bottom-0 h-[72%] w-full" preserveAspectRatio="none" aria-label="Bitcoin price chart rising over one hour">
-                <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--signal)" stopOpacity=".28"/><stop offset="1" stopColor="var(--signal)" stopOpacity="0"/></linearGradient></defs>
-                <path d="M0 205 L55 176 L110 188 L165 138 L220 151 L275 104 L330 124 L385 83 L440 91 L495 43 L550 73 L610 30 L665 47 L700 19 L700 240 L0 240Z" fill="url(#area)" />
-                <polyline className="chart-trace" points="0,205 55,176 110,188 165,138 220,151 275,104 330,124 385,83 440,91 495,43 550,73 610,30 665,47 700,19" fill="none" stroke="var(--signal)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-              </svg>
-              <div className="absolute bottom-4 left-4 right-4 flex justify-between text-[10px] text-muted-foreground"><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span></div>
-            </div>
-          </section>
-
-          {stats.map(([value, label, copy]) => (
-            <article key={label} className="col-span-12 rounded-2xl border border-border bg-card p-6 md:col-span-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-              <p className="mt-2 font-head text-4xl font-semibold">{value}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{copy}</p>
-            </article>
-          ))}
 
           <section id="markets" className="col-span-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {markets.map(([code, name, detail]) => (
