@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { accruedProfit, progressPercent } from "@/lib/investment";
+import { accruedProfit, progressPercent, signedMoney } from "@/lib/investment";
+import { fetchBtcPrice, useBtcPrice } from "@/lib/crypto-price";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({ meta: [{ title: "Investment plans | HeroesMarkets" }, { name: "description", content: "Choose a HeroesMarkets investment plan and start earning." }, { property: "og:title", content: "Investment plans | HeroesMarkets" }, { property: "og:description", content: "Choose a HeroesMarkets investment plan and start earning." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/plans")({
 });
 
 type Plan = { id: string; name: string; description: string; min_amount: number; max_amount: number | null; roi_percent: number; duration_days: number };
-type Investment = { id: string; amount: number; expected_return: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null };
+type Investment = { id: string; amount: number; expected_return: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null; entry_btc_price: number | null };
 
 function PlansPage() {
   const { user } = Route.useRouteContext();
@@ -25,6 +26,7 @@ function PlansPage() {
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const btcPrice = useBtcPrice();
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -34,7 +36,7 @@ function PlansPage() {
   async function load() {
     const [{ data: p }, { data: inv }] = await Promise.all([
       supabase.from("investment_plans").select("id,name,description,min_amount,max_amount,roi_percent,duration_days").order("sort_order"),
-      supabase.from("investments").select("id,amount,expected_return,status,started_at,ends_at,plan_id,profit_override").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("investments").select("id,amount,expected_return,status,started_at,ends_at,plan_id,profit_override,entry_btc_price").eq("user_id", user.id).order("created_at", { ascending: false }),
     ]);
     setPlans((p as Plan[]) ?? []);
     setInvestments((inv as Investment[]) ?? []);
@@ -49,7 +51,9 @@ function PlansPage() {
     if (selected.max_amount && value > Number(selected.max_amount)) { toast.error(`Maximum for ${selected.name} is $${Number(selected.max_amount).toFixed(0)}.`); return; }
     setBusy(true);
     const ends = new Date(Date.now() + selected.duration_days * 86400000).toISOString();
-    const { error } = await supabase.from("investments").insert({ user_id: user.id, plan_id: selected.id, amount: value, expected_return: Number((value * (1 + Number(selected.roi_percent) / 100)).toFixed(2)), ends_at: ends, status: "active" });
+    const entry = (await fetchBtcPrice()) ?? btcPrice;
+    if (!entry) { setBusy(false); toast.error("Live Bitcoin price unavailable right now. Please try again in a moment."); return; }
+    const { error } = await supabase.from("investments").insert({ user_id: user.id, plan_id: selected.id, amount: value, expected_return: Number((value * (1 + Number(selected.roi_percent) / 100)).toFixed(2)), ends_at: ends, status: "active", entry_btc_price: entry });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`Live trade started — ${selected.name} plan, $${value.toFixed(2)}.`);
@@ -58,9 +62,14 @@ function PlansPage() {
   }
 
   const planFor = (id: string) => plans.find((p) => p.id === id);
-  const liveProfit = investments.reduce((sum, row) => sum + accruedProfit(row, planFor(row.plan_id), now), 0);
+  const liveProfit = investments.reduce((sum, row) => sum + accruedProfit(row, planFor(row.plan_id), now, btcPrice), 0);
 
   return <AccountShell eyebrow="Grow" title="Investment plans">
+    <div className="mb-3 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm">
+      <span className="size-2 animate-pulse rounded-full bg-positive" />
+      <span className="text-muted-foreground">Live BTC/USD</span>
+      <span className="font-head text-lg font-semibold">{btcPrice ? `$${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "…"}</span>
+    </div>
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       {plans.map((plan) => <article key={plan.id} className={`rounded-2xl border bg-card p-6 transition-colors ${selected?.id === plan.id ? "border-signal" : "border-border"}`}>
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-signal">{plan.name}</p>
@@ -85,18 +94,18 @@ function PlansPage() {
         <Button type="submit" disabled={busy}>{busy ? "Starting…" : "Live trade now"}</Button>
         <Button type="button" variant="ghost" onClick={() => setSelected(null)}>Cancel</Button>
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">Profit accrues live at {Number(selected.roi_percent).toFixed(0)}% over {selected.duration_days} days — projected payout ${(Number(amount || 0) * (1 + Number(selected.roi_percent) / 100)).toFixed(2)}.</p>
+      <p className="mt-3 text-xs text-muted-foreground">Your position opens at the live BTC price and profit or loss moves with the real market. Plan target {Number(selected.roi_percent).toFixed(0)}% over {selected.duration_days} days.</p>
     </form>}
 
     <section className="mt-3 rounded-2xl border border-border bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-head text-xl font-semibold">Your live trades</h2>
-        <p className="text-sm text-muted-foreground">Live profit <span className="font-head text-lg font-semibold text-positive">+${liveProfit.toFixed(2)}</span></p>
+        <p className="text-sm text-muted-foreground">Live profit <span className={`font-head text-lg font-semibold ${liveProfit >= 0 ? "text-positive" : "text-signal"}`}>{signedMoney(liveProfit)}</span></p>
       </div>
       {investments.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No live trades yet — pick a plan above and hit Live trade now.</p> : <ul className="mt-4 divide-y divide-border">
         {investments.map((row) => {
           const plan = planFor(row.plan_id);
-          const earned = accruedProfit(row, plan, now);
+          const earned = accruedProfit(row, plan, now, btcPrice);
           const pct = progressPercent(row, plan, now);
           return <li key={row.id} className="py-4 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -105,8 +114,8 @@ function PlansPage() {
                 <p className="text-xs text-muted-foreground">Started {new Date(row.started_at).toLocaleDateString()}{row.ends_at ? ` · Matures ${new Date(row.ends_at).toLocaleDateString()}` : ""}</p>
               </div>
               <div className="text-right">
-                <p className="font-head text-lg font-semibold text-positive">+${earned.toFixed(2)}</p>
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{row.status} · target ${Number(row.expected_return).toFixed(2)}</p>
+                <p className={`font-head text-lg font-semibold ${earned >= 0 ? "text-positive" : "text-signal"}`}>{signedMoney(earned)}</p>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{row.status}{row.entry_btc_price ? ` · entry BTC $${Number(row.entry_btc_price).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}</p>
               </div>
             </div>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-background"><div className="h-full rounded-full bg-signal transition-all" style={{ width: `${pct}%` }} /></div>

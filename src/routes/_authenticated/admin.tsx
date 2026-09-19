@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/use-admin";
-import { accruedProfit, cashFromTransactions } from "@/lib/investment";
+import { accruedProfit, cashFromTransactions, signedMoney } from "@/lib/investment";
+import { useBtcPrice } from "@/lib/crypto-price";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin console | HeroesMarkets" }, { name: "description", content: "Manage member balances, profits and the website wallet." }, { property: "og:title", content: "Admin console | HeroesMarkets" }, { property: "og:description", content: "Manage member balances, profits and the website wallet." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Profile = { user_id: string; display_name: string; username: string | null; upgrade_required: boolean; account_on_hold: boolean };
 type Tx = { id: string; user_id: string; type: string; amount: number; status: string; withdrawal_progress: number; withdrawal_paused: boolean; created_at: string };
-type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null };
+type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null; entry_btc_price: number | null };
 type Plan = { id: string; name: string; roi_percent: number; duration_days: number };
 
 function AdminPage() {
@@ -34,6 +35,7 @@ function AdminPage() {
   const [withdrawalDraft, setWithdrawalDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const btcPrice = useBtcPrice();
 
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   useEffect(() => { const id = setTimeout(() => setChecked(true), 1200); return () => clearTimeout(id); }, []);
@@ -43,7 +45,7 @@ function AdminPage() {
       supabase.from("site_settings").select("value").eq("key", "btc_address").maybeSingle(),
       supabase.from("profiles").select("user_id,display_name,username,upgrade_required,account_on_hold"),
       supabase.from("transactions").select("id,user_id,type,amount,status,withdrawal_progress,withdrawal_paused,created_at"),
-      supabase.from("investments").select("id,user_id,plan_id,amount,status,started_at,ends_at,profit_override"),
+      supabase.from("investments").select("id,user_id,plan_id,amount,status,started_at,ends_at,profit_override,entry_btc_price"),
       supabase.from("investment_plans").select("id,name,roi_percent,duration_days").order("sort_order"),
     ]);
     setAddress((s?.value as string | undefined) ?? "");
@@ -100,7 +102,7 @@ function AdminPage() {
     return invs.filter((i) => i.user_id === userId && i.status === "active").reduce((s, i) => s + Number(i.amount), 0);
   }
   function profitFor(userId: string) {
-    return invs.filter((i) => i.user_id === userId).reduce((s, i) => s + accruedProfit(i, plans.find((p) => p.id === i.plan_id), now), 0);
+    return invs.filter((i) => i.user_id === userId).reduce((s, i) => s + accruedProfit(i, plans.find((p) => p.id === i.plan_id), now, btcPrice), 0);
   }
 
   async function setBalance(userId: string) {
@@ -255,11 +257,11 @@ function AdminPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-signal">Live trades</p>
               {rows.map((inv) => {
                 const plan = plans.find((pl) => pl.id === inv.plan_id);
-                const earned = accruedProfit(inv, plan, now);
+                const earned = accruedProfit(inv, plan, now, btcPrice);
                 return <div key={inv.id} className="rounded-lg border border-border p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <span>{plan?.name ?? "Plan"} · ${Number(inv.amount).toFixed(2)} · {inv.status}</span>
-                    <span className="font-head font-semibold text-positive">+${earned.toFixed(2)}{inv.profit_override !== null ? " (manual)" : ""}</span>
+                    <span className={`font-head font-semibold ${earned >= 0 ? "text-positive" : "text-signal"}`}>{signedMoney(earned)}{inv.profit_override !== null ? " (manual)" : ""}</span>
                   </div>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                     <Input inputMode="decimal" placeholder="Set profit (USD)" value={profitDraft[inv.id] ?? ""} onChange={(e) => setProfitDraft((d) => ({ ...d, [inv.id]: e.target.value }))} />
