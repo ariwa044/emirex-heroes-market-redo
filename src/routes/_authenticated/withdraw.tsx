@@ -19,7 +19,8 @@ function WithdrawPage() {
   const { user } = Route.useRouteContext();
   const [amount, setAmount] = useState("");
   const [destination, setDestination] = useState("");
-  const method = "crypto";
+  const [method, setMethod] = useState<"crypto" | "bank_transfer">("crypto");
+  const [bank, setBank] = useState({ bankName: "", accountName: "", accountNumber: "", routing: "", swift: "", country: "" });
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [balance, setBalance] = useState(0);
@@ -43,13 +44,30 @@ function WithdrawPage() {
     const value = Number(amount);
     if (!Number.isFinite(value) || value < 20) { toast.error("Minimum withdrawal is $20."); return; }
     if (value > balance) { toast.error("Amount exceeds your available balance."); return; }
-    if (destination.trim().length < 4) { toast.error("Enter the account or wallet to pay out to."); return; }
+    let note = "";
+    if (method === "crypto") {
+      if (destination.trim().length < 4) { toast.error("Enter the BTC wallet to pay out to."); return; }
+      note = `BTC wallet: ${destination.trim()}`;
+    } else {
+      if (bank.bankName.trim().length < 2) { toast.error("Enter your bank name."); return; }
+      if (bank.accountName.trim().length < 2) { toast.error("Enter the account holder name."); return; }
+      if (bank.accountNumber.trim().length < 5) { toast.error("Enter a valid account number or IBAN."); return; }
+      if (bank.country.trim().length < 2) { toast.error("Enter the bank country."); return; }
+      note = [
+        `Bank: ${bank.bankName.trim()}`,
+        `Account name: ${bank.accountName.trim()}`,
+        `Account/IBAN: ${bank.accountNumber.trim()}`,
+        bank.routing.trim() ? `Routing/Sort code: ${bank.routing.trim()}` : "",
+        bank.swift.trim() ? `SWIFT/BIC: ${bank.swift.trim()}` : "",
+        `Country: ${bank.country.trim()}`,
+      ].filter(Boolean).join(" · ").slice(0, 900);
+    }
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({ user_id: user.id, type: "withdrawal", amount: value, method, note: destination.trim() });
+    const { error } = await supabase.from("transactions").insert({ user_id: user.id, type: "withdrawal", amount: value, method, note });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Withdrawal request submitted for review.");
-    setAmount(""); setDestination("");
+    setAmount(""); setDestination(""); setBank({ bankName: "", accountName: "", accountNumber: "", routing: "", swift: "", country: "" });
     void load();
   }
 
@@ -64,10 +82,46 @@ function WithdrawPage() {
           <Input id="wamount" inputMode="decimal" placeholder="250" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="mt-5 space-y-2">
+          <Label>Payout method</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(["crypto", "bank_transfer"] as const).map((m) => <button key={m} type="button" onClick={() => setMethod(m)} className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${method === m ? "border-signal bg-signal-soft text-foreground" : "border-border text-muted-foreground hover:text-foreground"}`}>
+              {m === "crypto" ? "Bitcoin" : "Bank transfer"}
+            </button>)}
+          </div>
+        </div>
+        {method === "crypto" ? <div className="mt-5 space-y-2">
           <Label htmlFor="destination">Your BTC wallet address</Label>
           <Input id="destination" placeholder="Bitcoin wallet address" value={destination} onChange={(e) => setDestination(e.target.value)} />
-          <p className="text-xs text-muted-foreground">Payouts are sent in Bitcoin only. Double-check the address before submitting.</p>
-        </div>
+          <p className="text-xs text-muted-foreground">Double-check the address before submitting.</p>
+        </div> : <div className="mt-5 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="bankName">Bank name</Label>
+            <Input id="bankName" placeholder="e.g. First National Bank" value={bank.bankName} onChange={(e) => setBank({ ...bank, bankName: e.target.value })} maxLength={100} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="accountName">Account holder name</Label>
+            <Input id="accountName" placeholder="Name exactly as on the account" value={bank.accountName} onChange={(e) => setBank({ ...bank, accountName: e.target.value })} maxLength={100} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="accountNumber">Account number / IBAN</Label>
+            <Input id="accountNumber" placeholder="Account number or IBAN" value={bank.accountNumber} onChange={(e) => setBank({ ...bank, accountNumber: e.target.value })} maxLength={64} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="routing">Routing / sort code <span className="text-muted-foreground">(optional)</span></Label>
+              <Input id="routing" placeholder="Routing or sort code" value={bank.routing} onChange={(e) => setBank({ ...bank, routing: e.target.value })} maxLength={32} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="swift">SWIFT / BIC <span className="text-muted-foreground">(optional)</span></Label>
+              <Input id="swift" placeholder="SWIFT or BIC code" value={bank.swift} onChange={(e) => setBank({ ...bank, swift: e.target.value })} maxLength={20} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankCountry">Bank country</Label>
+            <Input id="bankCountry" placeholder="Country where the account is held" value={bank.country} onChange={(e) => setBank({ ...bank, country: e.target.value })} maxLength={60} />
+          </div>
+          <p className="text-xs text-muted-foreground">Bank payouts are reviewed manually and usually settle in 1–3 business days.</p>
+        </div>}
         <Button type="submit" className="mt-6 w-full" disabled={busy}>{busy ? "Submitting…" : "Request withdrawal"}</Button>
       </form>
       <section className="rounded-2xl border border-border bg-card p-6">
