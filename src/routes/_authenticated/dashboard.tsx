@@ -104,6 +104,6 @@ function DashboardPage() {
     <section className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="min-w-0"><h2 className="font-head text-lg font-semibold">Plan status</h2><p className="text-sm text-muted-foreground">{activePlans ? `${activePlans} active ${activePlans === 1 ? "plan" : "plans"} · ${tradeCount} recorded trades` : "No active plan"}</p></div>
       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${activePlans ? "bg-positive/10 text-positive" : "bg-muted text-muted-foreground"}`}>{activePlans ? "Active" : "Inactive"}</span>
-    </div>
+    </section>
   </AccountShell>;
 }
