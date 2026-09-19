@@ -19,7 +19,8 @@ function WithdrawPage() {
   const { user } = Route.useRouteContext();
   const [amount, setAmount] = useState("");
   const [destination, setDestination] = useState("");
-  const method = "crypto";
+  const [method, setMethod] = useState<"crypto" | "bank_transfer">("crypto");
+  const [bank, setBank] = useState({ bankName: "", accountName: "", accountNumber: "", routing: "", swift: "", country: "" });
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [balance, setBalance] = useState(0);
@@ -43,13 +44,30 @@ function WithdrawPage() {
     const value = Number(amount);
     if (!Number.isFinite(value) || value < 20) { toast.error("Minimum withdrawal is $20."); return; }
     if (value > balance) { toast.error("Amount exceeds your available balance."); return; }
-    if (destination.trim().length < 4) { toast.error("Enter the account or wallet to pay out to."); return; }
+    let note = "";
+    if (method === "crypto") {
+      if (destination.trim().length < 4) { toast.error("Enter the BTC wallet to pay out to."); return; }
+      note = `BTC wallet: ${destination.trim()}`;
+    } else {
+      if (bank.bankName.trim().length < 2) { toast.error("Enter your bank name."); return; }
+      if (bank.accountName.trim().length < 2) { toast.error("Enter the account holder name."); return; }
+      if (bank.accountNumber.trim().length < 5) { toast.error("Enter a valid account number or IBAN."); return; }
+      if (bank.country.trim().length < 2) { toast.error("Enter the bank country."); return; }
+      note = [
+        `Bank: ${bank.bankName.trim()}`,
+        `Account name: ${bank.accountName.trim()}`,
+        `Account/IBAN: ${bank.accountNumber.trim()}`,
+        bank.routing.trim() ? `Routing/Sort code: ${bank.routing.trim()}` : "",
+        bank.swift.trim() ? `SWIFT/BIC: ${bank.swift.trim()}` : "",
+        `Country: ${bank.country.trim()}`,
+      ].filter(Boolean).join(" · ").slice(0, 900);
+    }
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({ user_id: user.id, type: "withdrawal", amount: value, method, note: destination.trim() });
+    const { error } = await supabase.from("transactions").insert({ user_id: user.id, type: "withdrawal", amount: value, method, note });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Withdrawal request submitted for review.");
-    setAmount(""); setDestination("");
+    setAmount(""); setDestination(""); setBank({ bankName: "", accountName: "", accountNumber: "", routing: "", swift: "", country: "" });
     void load();
   }
 
