@@ -28,6 +28,12 @@
   --color-signal: var(--signal);
   --color-signal-soft: var(--signal-soft);
   --color-positive: var(--positive);
+  --color-metric-blue: var(--metric-blue);
+  --color-metric-green: var(--metric-green);
+  --color-metric-violet: var(--metric-violet);
+  --color-metric-teal: var(--metric-teal);
+  --color-metric-orange: var(--metric-orange);
+  --color-metric-gold: var(--metric-gold);
   --font-head: "Space Grotesk", sans-serif;
   --font-body: "DM Sans", sans-serif;
 }
@@ -52,6 +58,12 @@
   --signal: oklch(0.611 0.244 26);
   --signal-soft: oklch(0.611 0.244 26 / 0.14);
   --positive: oklch(0.72 0.18 151);
+  --metric-blue: oklch(0.58 0.2 257);
+  --metric-green: oklch(0.64 0.18 151);
+  --metric-violet: oklch(0.59 0.23 300);
+  --metric-teal: oklch(0.62 0.14 185);
+  --metric-orange: oklch(0.67 0.2 48);
+  --metric-gold: oklch(0.72 0.17 81);
 }
 
 * { border-color: var(--border); }
@@ -63,6 +75,7 @@ a { cursor: pointer; }
 .chart-trace { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: draw 2.4s ease-out forwards; }
 .pulse-dot { animation: pulse 1.9s ease-in-out infinite; }
 .chart-grid { background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 64px 48px; }
+.dashboard-welcome { background: radial-gradient(circle at 88% 18%, color-mix(in oklab, var(--positive) 18%, transparent), transparent 36%), linear-gradient(125deg, color-mix(in oklab, var(--signal) 18%, var(--card)), var(--card) 58%, color-mix(in oklab, var(--metric-gold) 12%, var(--card))); }
 
 @keyframes ticker { to { transform: translateX(-50%); } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
