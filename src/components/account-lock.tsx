@@ -1,7 +1,7 @@
 import { AlertCircle, RadioTower } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function AccountLock({ reason = "upgrade", onDismiss }: { reason?: "upgrade" | "hold"; onDismiss?: () => void }) {
+export function AccountLock({ reason = "upgrade", onDismiss }: { reason?: "upgrade" | "hold"; onDismiss?: (() => void) | undefined }) {
   const onHold = reason === "hold";
   const Icon = onHold ? RadioTower : AlertCircle;
 
