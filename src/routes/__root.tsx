@@ -109,6 +109,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script src="//code.jivosite.com/widget/C8b5qtFTIN" async></script>
       </head>
       <body>
         {children}
