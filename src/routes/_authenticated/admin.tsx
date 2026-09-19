@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpFromLine, Pause, Play, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowUpFromLine, Pause, Play, TrendingUp, UserRound, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,10 @@ type Tx = { id: string; user_id: string; type: string; amount: number; status: s
 type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null; entry_btc_price: number | null };
 type Plan = { id: string; name: string; roi_percent: number; duration_days: number };
 
+function memberName(p: Profile | undefined) {
+  return p?.display_name || p?.username || "Member";
+}
+
 function AdminPage() {
   const { user } = Route.useRouteContext();
   const isAdmin = useIsAdmin(user.id);
@@ -30,7 +34,8 @@ function AdminPage() {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [invs, setInvs] = useState<Inv[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [balanceDraft, setBalanceDraft] = useState<Record<string, string>>({});
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [balanceDraft, setBalanceDraft] = useState("");
   const [profitDraft, setProfitDraft] = useState<Record<string, string>>({});
   const [withdrawalDraft, setWithdrawalDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -106,8 +111,8 @@ function AdminPage() {
   }
 
   async function setBalance(userId: string) {
-    const target = Number(balanceDraft[userId]);
-    if (!Number.isFinite(target)) { toast.error("Enter a number."); return; }
+    const target = Number(balanceDraft);
+    if (!Number.isFinite(target) || balanceDraft.trim() === "") { toast.error("Enter a number."); return; }
     const current = cashFor(userId);
     const diff = Number((target - current).toFixed(2));
     if (diff === 0) { toast.message("Balance already at that amount."); return; }
@@ -123,7 +128,7 @@ function AdminPage() {
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Balance updated.");
-    setBalanceDraft((d) => ({ ...d, [userId]: "" }));
+    setBalanceDraft("");
     void load();
   }
 
@@ -162,117 +167,153 @@ function AdminPage() {
     void load();
   }
 
-  const withdrawals = txs.filter((tx) => tx.type === "withdrawal" && tx.status !== "rejected").sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  function openMember(userId: string) {
+    setSelectedUserId(userId);
+    setBalanceDraft("");
+  }
 
-  return <AccountShell eyebrow="Control" title="Admin console">
-    <section className="rounded-2xl border border-signal/40 bg-signal-soft p-6">
-      <Wallet className="text-signal" />
-      <h2 className="mt-4 font-head text-xl font-semibold">Website Bitcoin wallet</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Shown to every member on the deposit page.</p>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex-1 space-y-2">
-          <Label htmlFor="btc">BTC address</Label>
-          <Input id="btc" value={address} onChange={(e) => setAddress(e.target.value)} className="font-mono" />
-        </div>
-        <Button onClick={() => void saveAddress()} disabled={busy}>Save address</Button>
+  const selected = profiles.find((p) => p.user_id === selectedUserId) ?? null;
+
+  const walletSection = <section className="rounded-2xl border border-signal/40 bg-signal-soft p-6">
+    <Wallet className="text-signal" />
+    <h2 className="mt-4 font-head text-xl font-semibold">Website Bitcoin wallet</h2>
+    <p className="mt-2 text-sm text-muted-foreground">Shown to every member on the deposit page.</p>
+    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex-1 space-y-2">
+        <Label htmlFor="btc">BTC address</Label>
+        <Input id="btc" value={address} onChange={(e) => setAddress(e.target.value)} className="font-mono" />
       </div>
+      <Button onClick={() => void saveAddress()} disabled={busy}>Save address</Button>
+    </div>
+  </section>;
+
+  if (!selected) {
+    return <AccountShell eyebrow="Control" title="Admin console">
+      {walletSection}
+
+      <section className="mt-3 rounded-2xl border border-border bg-card p-6">
+        <UserRound className="text-signal" />
+        <h2 className="mt-4 font-head text-xl font-semibold">Members</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Select a member to manage their balance, trades, withdrawals and account status.</p>
+        {profiles.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No members yet.</p> : <ul className="mt-4 space-y-2">
+          {profiles.map((p) => {
+            const cash = cashFor(p.user_id);
+            const invested = investedFor(p.user_id);
+            const profit = profitFor(p.user_id);
+            const balance = cash - invested + profit;
+            return <li key={p.user_id}>
+              <button type="button" onClick={() => openMember(p.user_id)} className="flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-left transition-colors hover:border-signal/60 hover:bg-muted/40">
+                <div className="min-w-0">
+                  <p className="truncate font-head font-semibold">{memberName(p)}</p>
+                  <p className="text-xs text-muted-foreground">{p.username ? `@${p.username}` : p.user_id}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {p.upgrade_required && <span className="rounded-full border border-signal/50 bg-signal-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-signal">Upgrade required</span>}
+                    {p.account_on_hold && <span className="rounded-full border border-signal/50 bg-signal-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-signal">On hold</span>}
+                  </div>
+                </div>
+                <div className="text-right text-sm">
+                  <p className="font-head font-semibold">${balance.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground">{invs.filter((i) => i.user_id === p.user_id).length} trades · {txs.filter((t) => t.user_id === p.user_id && t.type === "withdrawal").length} withdrawals</p>
+                </div>
+              </button>
+            </li>;
+          })}
+        </ul>}
+      </section>
+    </AccountShell>;
+  }
+
+  const cash = cashFor(selected.user_id);
+  const invested = investedFor(selected.user_id);
+  const profit = profitFor(selected.user_id);
+  const balance = cash - invested + profit;
+  const memberTrades = invs.filter((i) => i.user_id === selected.user_id).sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at));
+  const memberWithdrawals = txs.filter((tx) => tx.user_id === selected.user_id && tx.type === "withdrawal" && tx.status !== "rejected").sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+
+  return <AccountShell eyebrow="Control" title={memberName(selected)}>
+    <Button variant="ghost" size="sm" onClick={() => setSelectedUserId(null)} className="mb-3">
+      <ArrowLeft className="mr-2 size-4" />Back to members
+    </Button>
+
+    <section className="rounded-2xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-head text-lg font-semibold">{memberName(selected)}</p>
+          <p className="text-xs text-muted-foreground">{selected.username ? `@${selected.username}` : selected.user_id}</p>
+        </div>
+        <div className="text-right text-sm">
+          <p className="font-head text-lg font-semibold">${balance.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground">cash ${cash.toFixed(2)} · invested ${invested.toFixed(2)} · profit ${profit.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="flex-1 space-y-2">
+          <Label htmlFor={`bal-${selected.user_id}`}>Set cash balance (USD)</Label>
+          <Input id={`bal-${selected.user_id}`} inputMode="decimal" placeholder={cash.toFixed(2)} value={balanceDraft} onChange={(e) => setBalanceDraft(e.target.value)} />
+        </div>
+        <Button variant="outline" onClick={() => void setBalance(selected.user_id)} disabled={busy}>Update balance</Button>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button variant={selected.upgrade_required ? "default" : "outline"} onClick={() => void toggleUpgrade(selected)} disabled={busy}>
+          {selected.upgrade_required ? "Activate account" : "Upgrade"}
+        </Button>
+        <Button variant={selected.account_on_hold ? "default" : "outline"} onClick={() => void toggleAccountHold(selected)} disabled={busy}>
+          {selected.account_on_hold ? "Restore account" : "Place on hold"}
+        </Button>
+        {selected.upgrade_required && <span className="text-xs text-signal">Account locked — upgrade warning shown to this member.</span>}
+        {selected.account_on_hold && <span className="text-xs text-signal">Account on hold — this member cannot use their account.</span>}
+      </div>
+    </section>
+
+    <section className="mt-3 rounded-2xl border border-border bg-card p-6">
+      <TrendingUp className="text-signal" />
+      <h2 className="mt-4 font-head text-xl font-semibold">Live trades</h2>
+      {memberTrades.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">This member has no trades yet.</p> : <div className="mt-5 space-y-3">
+        {memberTrades.map((inv) => {
+          const plan = plans.find((pl) => pl.id === inv.plan_id);
+          const earned = accruedProfit(inv, plan, now, btcPrice);
+          return <div key={inv.id} className="rounded-lg border border-border p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span>{plan?.name ?? "Plan"} · ${Number(inv.amount).toFixed(2)} · {inv.status}</span>
+              <span className={`font-head font-semibold ${earned >= 0 ? "text-positive" : "text-signal"}`}>{signedMoney(earned)}{inv.profit_override !== null ? " (manual)" : ""}</span>
+            </div>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input inputMode="decimal" placeholder="Set profit (USD)" value={profitDraft[inv.id] ?? ""} onChange={(e) => setProfitDraft((d) => ({ ...d, [inv.id]: e.target.value }))} />
+              <Button variant="outline" onClick={() => void setProfit(inv)} disabled={busy}>Set profit</Button>
+              {inv.profit_override !== null && <Button variant="ghost" onClick={() => void setProfit(inv, true)} disabled={busy}>Auto</Button>}
+            </div>
+          </div>;
+        })}
+      </div>}
     </section>
 
     <section className="mt-3 rounded-2xl border border-border bg-card p-6">
       <ArrowUpFromLine className="text-signal" />
       <h2 className="mt-4 font-head text-xl font-semibold">Withdrawal progress</h2>
       <p className="mt-2 text-sm text-muted-foreground">Update each payout from 0 to 100. At 100%, it is marked completed automatically.</p>
-      {withdrawals.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">No withdrawal requests yet.</p> : <ul className="mt-5 space-y-3">
-        {withdrawals.map((tx) => {
-          const member = profiles.find((profile) => profile.user_id === tx.user_id);
-          return <li key={tx.id} className="rounded-lg border border-border p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-medium">{member?.display_name || member?.username || "Member"}</p>
-                <p className="mt-1 text-xs text-muted-foreground">${Number(tx.amount).toFixed(2)} · {new Date(tx.created_at).toLocaleString()}</p>
-              </div>
-              <span className="text-xs font-semibold uppercase text-muted-foreground">{tx.withdrawal_paused ? "paused" : tx.status}</span>
+      {memberWithdrawals.length === 0 ? <p className="mt-5 text-sm text-muted-foreground">No withdrawal requests yet.</p> : <ul className="mt-5 space-y-3">
+        {memberWithdrawals.map((tx) => <li key={tx.id} className="rounded-lg border border-border p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="mt-1 text-xs text-muted-foreground">${Number(tx.amount).toFixed(2)} · {new Date(tx.created_at).toLocaleString()}</p>
+            <span className="text-xs font-semibold uppercase text-muted-foreground">{tx.withdrawal_paused ? "paused" : tx.status}</span>
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Withdrawal progress ${tx.withdrawal_progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={tx.withdrawal_progress}>
+              <div className={`h-full rounded-full transition-[width] duration-500 ${tx.withdrawal_paused ? "bg-signal" : "bg-positive"}`} style={{ width: `${tx.withdrawal_progress}%` }} />
             </div>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Withdrawal progress ${tx.withdrawal_progress}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={tx.withdrawal_progress}>
-                <div className={`h-full rounded-full transition-[width] duration-500 ${tx.withdrawal_paused ? "bg-signal" : "bg-positive"}`} style={{ width: `${tx.withdrawal_progress}%` }} />
-              </div>
-              <span className="w-10 text-right text-xs font-semibold tabular-nums">{tx.withdrawal_progress}%</span>
-            </div>
-            {tx.withdrawal_paused && <p className="mt-3 rounded-lg border border-signal/50 bg-signal-soft p-3 text-xs">Member sees: “An upgrade is needed to process the withdrawal. Please reach out to customer support for assistance.”</p>}
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Input type="number" min={0} max={100} step={1} aria-label="Withdrawal progress percentage" placeholder={String(tx.withdrawal_progress)} value={withdrawalDraft[tx.id] ?? ""} onChange={(event) => setWithdrawalDraft((drafts) => ({ ...drafts, [tx.id]: event.target.value }))} />
-              <Button variant="outline" onClick={() => void setWithdrawalProgress(tx)} disabled={busy}>Update progress</Button>
-              <Button variant={tx.withdrawal_paused ? "default" : "ghost"} onClick={() => void toggleWithdrawalPause(tx)} disabled={busy}>
-                {tx.withdrawal_paused ? <><Play className="mr-2 size-4" />Resume</> : <><Pause className="mr-2 size-4" />Pause</>}
-              </Button>
-            </div>
-          </li>;
-        })}
-      </ul>}
-    </section>
-
-    <section className="mt-3 rounded-2xl border border-border bg-card p-6">
-      <ShieldCheck className="text-signal" />
-      <h2 className="mt-4 font-head text-xl font-semibold">Members</h2>
-      {profiles.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No members yet.</p> : <ul className="mt-4 space-y-4">
-        {profiles.map((p) => {
-          const cash = cashFor(p.user_id);
-          const invested = investedFor(p.user_id);
-          const profit = profitFor(p.user_id);
-          const balance = cash - invested + profit;
-          const rows = invs.filter((i) => i.user_id === p.user_id);
-          return <li key={p.user_id} className="rounded-xl border border-border p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-head text-lg font-semibold">{p.display_name || "Member"}</p>
-                <p className="text-xs text-muted-foreground">{p.username ? `@${p.username}` : p.user_id}</p>
-              </div>
-              <div className="text-right text-sm">
-                <p className="font-head text-lg font-semibold">${balance.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">cash ${cash.toFixed(2)} · invested ${invested.toFixed(2)} · profit ${profit.toFixed(2)}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor={`bal-${p.user_id}`}>Set cash balance (USD)</Label>
-                <Input id={`bal-${p.user_id}`} inputMode="decimal" placeholder={cash.toFixed(2)} value={balanceDraft[p.user_id] ?? ""} onChange={(e) => setBalanceDraft((d) => ({ ...d, [p.user_id]: e.target.value }))} />
-              </div>
-              <Button variant="outline" onClick={() => void setBalance(p.user_id)} disabled={busy}>Update balance</Button>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button variant={p.upgrade_required ? "default" : "outline"} onClick={() => void toggleUpgrade(p)} disabled={busy}>
-                {p.upgrade_required ? "Activate account" : "Upgrade"}
-              </Button>
-              <Button variant={p.account_on_hold ? "default" : "outline"} onClick={() => void toggleAccountHold(p)} disabled={busy}>
-                {p.account_on_hold ? "Restore account" : "Place on hold"}
-              </Button>
-              {p.upgrade_required && <span className="text-xs text-signal">Account locked — upgrade warning shown to this member.</span>}
-              {p.account_on_hold && <span className="text-xs text-signal">Account on hold — this member cannot use their account.</span>}
-            </div>
-
-            {rows.length > 0 && <div className="mt-5 space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-signal">Live trades</p>
-              {rows.map((inv) => {
-                const plan = plans.find((pl) => pl.id === inv.plan_id);
-                const earned = accruedProfit(inv, plan, now, btcPrice);
-                return <div key={inv.id} className="rounded-lg border border-border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <span>{plan?.name ?? "Plan"} · ${Number(inv.amount).toFixed(2)} · {inv.status}</span>
-                    <span className={`font-head font-semibold ${earned >= 0 ? "text-positive" : "text-signal"}`}>{signedMoney(earned)}{inv.profit_override !== null ? " (manual)" : ""}</span>
-                  </div>
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <Input inputMode="decimal" placeholder="Set profit (USD)" value={profitDraft[inv.id] ?? ""} onChange={(e) => setProfitDraft((d) => ({ ...d, [inv.id]: e.target.value }))} />
-                    <Button variant="outline" onClick={() => void setProfit(inv)} disabled={busy}>Set profit</Button>
-                    {inv.profit_override !== null && <Button variant="ghost" onClick={() => void setProfit(inv, true)} disabled={busy}>Auto</Button>}
-                  </div>
-                </div>;
-              })}
-            </div>}
-          </li>;
-        })}
+            <span className="w-10 text-right text-xs font-semibold tabular-nums">{tx.withdrawal_progress}%</span>
+          </div>
+          {tx.withdrawal_paused && <p className="mt-3 rounded-lg border border-signal/50 bg-signal-soft p-3 text-xs">Member sees: “An upgrade is needed to process the withdrawal. Please reach out to customer support for assistance.”</p>}
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Input type="number" min={0} max={100} step={1} aria-label="Withdrawal progress percentage" placeholder={String(tx.withdrawal_progress)} value={withdrawalDraft[tx.id] ?? ""} onChange={(event) => setWithdrawalDraft((drafts) => ({ ...drafts, [tx.id]: event.target.value }))} />
+            <Button variant="outline" onClick={() => void setWithdrawalProgress(tx)} disabled={busy}>Update progress</Button>
+            <Button variant={tx.withdrawal_paused ? "default" : "ghost"} onClick={() => void toggleWithdrawalPause(tx)} disabled={busy}>
+              {tx.withdrawal_paused ? <><Play className="mr-2 size-4" />Resume</> : <><Pause className="mr-2 size-4" />Pause</>}
+            </Button>
+          </div>
+        </li>)}
       </ul>}
     </section>
   </AccountShell>;
