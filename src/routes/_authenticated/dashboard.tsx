@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowDownToLine, ArrowUpFromLine, Bitcoin, CircleCheck, Gift, History, Layers, TrendingUp, WalletCards } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Bitcoin, CircleCheck, Gift, History, Layers, Rocket, TrendingUp, WalletCards } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ function DashboardPage() {
   const [invested, setInvested] = useState(0);
   const [deposits, setDeposits] = useState(0);
   const [withdrawals, setWithdrawals] = useState(0);
-  const [displayName, setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState("Trader");
   const [live, setLive] = useState<{ rows: LiveRow[]; plans: PlanRow[] }>({ rows: [], plans: [] });
   const [now, setNow] = useState(() => Date.now());
   const btcPrice = useBtcPrice();
@@ -77,7 +77,7 @@ function DashboardPage() {
     <section className="dashboard-welcome relative overflow-hidden rounded-xl border border-border p-6 sm:p-8">
       <div className="relative z-10 max-w-2xl">
         <p className="flex items-center gap-2 text-sm font-medium text-positive"><span className="size-2 rounded-full bg-positive" />Markets open</p>
-        <h2 className="mt-4 font-head text-2xl font-semibold sm:text-3xl">Welcome back, {displayName}! <span aria-hidden="true">🚀</span></h2>
+        <h2 className="mt-4 flex items-center gap-2 font-head text-2xl font-semibold sm:text-3xl"><span className="min-w-0">Welcome back, {displayName}!</span><Rocket className="size-6 shrink-0 text-signal" aria-hidden="true" /></h2>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Your journey to <span className="font-semibold text-foreground">financial freedom</span> starts here. Start trading today and watch your portfolio move with the market.</p>
         <Button asChild size="lg" className="mt-6 w-full sm:w-auto"><Link to="/deposit"><ArrowDownToLine /> Make a deposit &amp; start earning</Link></Button>
       </div>
