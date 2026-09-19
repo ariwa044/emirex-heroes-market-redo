@@ -5,8 +5,9 @@ import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { accruedProfit } from "@/lib/investment";
+import { useBtcPrice } from "@/lib/crypto-price";
 
-type LiveRow = { amount: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null };
+type LiveRow = { amount: number; status: string; started_at: string; ends_at: string | null; plan_id: string; profit_override: number | null; entry_btc_price: number | null };
 type PlanRow = { id: string; roi_percent: number; duration_days: number };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -23,13 +24,14 @@ function DashboardPage() {
   const [invested, setInvested] = useState(0);
   const [live, setLive] = useState<{ rows: LiveRow[]; plans: PlanRow[] }>({ rows: [], plans: [] });
   const [now, setNow] = useState(() => Date.now());
+  const btcPrice = useBtcPrice();
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   useEffect(() => { supabase.from("trading_history").select("profit_loss").eq("user_id", user.id).then(({ data }) => { setTradeCount(data?.length ?? 0); setProfit(data?.reduce((sum, row) => sum + (row.profit_loss ?? 0), 0) ?? 0); }); }, [user.id]);
   useEffect(() => {
     void (async () => {
       const [{ data: tx }, { data: inv }, { data: pl }] = await Promise.all([
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
-        supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override").eq("user_id", user.id),
+        supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override,entry_btc_price").eq("user_id", user.id),
         supabase.from("investment_plans").select("id,roi_percent,duration_days"),
       ]);
       const rows = ((inv ?? []) as LiveRow[]);
@@ -44,7 +46,7 @@ function DashboardPage() {
       setLive({ rows, plans: ((pl ?? []) as PlanRow[]) });
     })();
   }, [user.id]);
-  const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now), 0);
+  const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now, btcPrice), 0);
   const balance = cash - invested + livePl;
   const totalPl = profit + livePl;
   useEffect(() => {
@@ -61,7 +63,7 @@ function DashboardPage() {
       <Button asChild variant="outline"><Link to="/plans"><Layers /> Invest</Link></Button>
     </div>
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {[['Account balance', `${balance < 0 ? '-' : ''}$${Math.abs(balance).toFixed(2)}`, 'Cash plus live trade profit'], ['Invested', `$${invested.toFixed(2)}`, 'Capital in running plans'], ['Net profit / loss', `${totalPl >= 0 ? '+' : '-'}$${Math.abs(totalPl).toFixed(2)}`, 'Live plans and recorded trades'], ['Total trades', String(tradeCount), 'Open and closed positions']].map(([label,value,copy]) => <article key={label} className="rounded-2xl border border-border bg-card p-6"><p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p><p className={`mt-3 font-head text-3xl font-semibold ${label === 'Net profit / loss' ? (totalPl >= 0 ? 'text-positive' : 'text-signal') : ''}`}>{value}</p><p className="mt-2 text-xs text-muted-foreground">{copy}</p></article>)}
+      {[['Account balance', `${balance < 0 ? '-' : ''}$${Math.abs(balance).toFixed(2)}`, 'Cash plus live market profit'], ['Invested', `$${invested.toFixed(2)}`, 'Capital in running plans'], ['Net profit / loss', `${totalPl >= 0 ? '+' : '-'}$${Math.abs(totalPl).toFixed(2)}`, `Live BTC market${btcPrice ? ` · $${btcPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : ''}`], ['Total trades', String(tradeCount), 'Open and closed positions']].map(([label,value,copy]) => <article key={label} className="rounded-2xl border border-border bg-card p-6"><p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p><p className={`mt-3 font-head text-3xl font-semibold ${label === 'Net profit / loss' ? (totalPl >= 0 ? 'text-positive' : 'text-signal') : ''}`}>{value}</p><p className="mt-2 text-xs text-muted-foreground">{copy}</p></article>)}
     </div>
     <div className="mt-3 grid gap-3 lg:grid-cols-[1.5fr_1fr]">
       <section className="rounded-2xl border border-border bg-card p-6"><div className="flex items-center justify-between"><div><p className="text-[11px] uppercase tracking-[0.18em] text-signal">Portfolio</p><h2 className="mt-2 font-head text-xl font-semibold">Performance</h2></div><WalletCards className="text-signal" /></div><div className="chart-grid mt-6 grid h-56 place-items-center rounded-xl border border-border bg-background/40 text-center"><div><p className="font-head text-lg font-semibold">Your performance starts here</p><p className="mt-2 text-sm text-muted-foreground">Completed trades will appear on this chart.</p></div></div></section>

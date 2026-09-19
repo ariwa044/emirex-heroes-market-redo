@@ -58,6 +58,7 @@ export type Database = {
           amount: number
           created_at: string
           ends_at: string | null
+          entry_btc_price: number | null
           expected_return: number
           id: string
           plan_id: string
@@ -71,6 +72,7 @@ export type Database = {
           amount: number
           created_at?: string
           ends_at?: string | null
+          entry_btc_price?: number | null
           expected_return?: number
           id?: string
           plan_id: string
@@ -84,6 +86,7 @@ export type Database = {
           amount?: number
           created_at?: string
           ends_at?: string | null
+          entry_btc_price?: number | null
           expected_return?: number
           id?: string
           plan_id?: string
