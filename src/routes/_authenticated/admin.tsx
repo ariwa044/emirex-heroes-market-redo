@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, ArrowUpFromLine, Pause, Play, TrendingUp, UserRound, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowUpFromLine, Coins, Pause, Play, TrendingUp, UserRound, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -296,6 +296,30 @@ function AdminPage() {
         </Button>
         {selected.upgrade_required && <span className="text-xs text-signal">Account locked — upgrade warning shown to this member.</span>}
         {selected.account_on_hold && <span className="text-xs text-signal">Account on hold — this member cannot use their account.</span>}
+      </div>
+    </section>
+
+    <section className="mt-3 rounded-2xl border border-border bg-card p-6">
+      <Coins className="text-signal" />
+      <h2 className="mt-4 font-head text-xl font-semibold">Dashboard figures</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Type a value to show it on this member&apos;s dashboard. Leave a box empty to keep what is there now.</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor={`mp-${selected.user_id}`}>Profit / ROI (USD)</Label>
+          <Input id={`mp-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_profit === null ? "automatic" : String(selected.manual_profit)} value={tileDraft.profit} onChange={(e) => setTileDraft((d) => ({ ...d, profit: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`mw-${selected.user_id}`}>Withdrawals (USD)</Label>
+          <Input id={`mw-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_withdrawals === null ? "automatic" : String(selected.manual_withdrawals)} value={tileDraft.withdrawals} onChange={(e) => setTileDraft((d) => ({ ...d, withdrawals: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`mb-${selected.user_id}`}>Bitcoin (BTC)</Label>
+          <Input id={`mb-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_bitcoin === null ? "automatic" : String(selected.manual_bitcoin)} value={tileDraft.bitcoin} onChange={(e) => setTileDraft((d) => ({ ...d, bitcoin: e.target.value }))} />
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => void saveTiles(selected)} disabled={busy}>Save figures</Button>
+        <Button variant="ghost" onClick={() => void clearTiles(selected)} disabled={busy}>Back to automatic</Button>
       </div>
     </section>
 
