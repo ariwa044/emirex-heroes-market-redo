@@ -168,9 +168,40 @@ function AdminPage() {
     void load();
   }
 
+  async function saveTiles(p: Profile) {
+    const parse = (raw: string, current: number | null) => {
+      const value = raw.trim();
+      if (value === "") return current;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : current;
+    };
+    setBusy(true);
+    const { error } = await supabase.from("profiles").update({
+      manual_profit: parse(tileDraft.profit, p.manual_profit),
+      manual_withdrawals: parse(tileDraft.withdrawals, p.manual_withdrawals),
+      manual_bitcoin: parse(tileDraft.bitcoin, p.manual_bitcoin),
+    }).eq("user_id", p.user_id);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Member dashboard figures updated.");
+    setTileDraft({ profit: "", withdrawals: "", bitcoin: "" });
+    void load();
+  }
+
+  async function clearTiles(p: Profile) {
+    setBusy(true);
+    const { error } = await supabase.from("profiles").update({ manual_profit: null, manual_withdrawals: null, manual_bitcoin: null }).eq("user_id", p.user_id);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Back to automatic figures.");
+    setTileDraft({ profit: "", withdrawals: "", bitcoin: "" });
+    void load();
+  }
+
   function openMember(userId: string) {
     setSelectedUserId(userId);
     setBalanceDraft("");
+    setTileDraft({ profit: "", withdrawals: "", bitcoin: "" });
   }
 
   const selected = profiles.find((p) => p.user_id === selectedUserId) ?? null;
