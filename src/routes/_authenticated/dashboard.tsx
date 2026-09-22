@@ -69,7 +69,8 @@ function DashboardPage() {
     setWelcomeName(name);
     sessionStorage.removeItem("heroes-welcome");
   }, []);
-  const btcHolding = btcPrice ? Math.max(0, balance / btcPrice) : 0;
+  const btcHolding = manual.bitcoin ?? (btcPrice ? Math.max(0, balance / btcPrice) : 0);
+  const btcValue = btcPrice ? btcHolding * btcPrice : 0;
   const activePlans = live.rows.filter((row) => row.status === "active").length;
   const metrics = [
     { label: "Balance", value: `${balance < 0 ? "-" : ""}$${Math.abs(balance).toFixed(2)}`, icon: WalletCards, tone: "bg-metric-blue" },
