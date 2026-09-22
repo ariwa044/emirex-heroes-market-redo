@@ -77,8 +77,8 @@ function DashboardPage() {
     { label: "Profit / ROI", value: `${totalPl >= 0 ? "+" : "-"}$${Math.abs(totalPl).toFixed(2)}`, icon: TrendingUp, tone: "bg-metric-green" },
     { label: "Invested", value: `$${invested.toFixed(2)}`, icon: Gift, tone: "bg-metric-violet" },
     { label: "Deposits", value: `$${deposits.toFixed(2)}`, icon: ArrowDownToLine, tone: "bg-metric-teal" },
-    { label: "Withdrawals", value: `$${withdrawals.toFixed(2)}`, icon: ArrowUpFromLine, tone: "bg-metric-orange" },
-    { label: "Bitcoin", value: `${btcHolding.toFixed(6)} BTC`, icon: Bitcoin, tone: "bg-metric-gold", note: btcPrice ? `≈ $${Math.max(0, balance).toFixed(2)}` : "Price loading" },
+    { label: "Withdrawals", value: `$${withdrawalsShown.toFixed(2)}`, icon: ArrowUpFromLine, tone: "bg-metric-orange" },
+    { label: "Bitcoin", value: `${btcHolding.toFixed(6)} BTC`, icon: Bitcoin, tone: "bg-metric-gold", note: btcPrice ? `≈ $${btcValue.toFixed(2)}` : "Price loading" },
   ];
   return <AccountShell eyebrow="Control room" title="Account overview">
     {welcomeName && <section className="mb-3 flex items-center justify-between gap-4 rounded-2xl border border-signal/40 bg-signal-soft p-5"><div><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-signal">Account ready</p><h2 className="mt-1 font-head text-xl font-semibold">Welcome to HeroesMarkets, {welcomeName}</h2><p className="mt-1 text-sm text-muted-foreground">Your trading account has been created successfully.</p></div><span className="hidden size-10 place-items-center rounded-xl bg-primary text-primary-foreground sm:grid">✓</span></section>}
