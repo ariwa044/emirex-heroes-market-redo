@@ -113,6 +113,9 @@ export type Database = {
           country: string | null
           created_at: string
           display_name: string
+          manual_bitcoin: number | null
+          manual_profit: number | null
+          manual_withdrawals: number | null
           preferred_currency: string
           updated_at: string
           upgrade_required: boolean
@@ -125,6 +128,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string
+          manual_bitcoin?: number | null
+          manual_profit?: number | null
+          manual_withdrawals?: number | null
           preferred_currency?: string
           updated_at?: string
           upgrade_required?: boolean
@@ -137,6 +143,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string
+          manual_bitcoin?: number | null
+          manual_profit?: number | null
+          manual_withdrawals?: number | null
           preferred_currency?: string
           updated_at?: string
           upgrade_required?: boolean

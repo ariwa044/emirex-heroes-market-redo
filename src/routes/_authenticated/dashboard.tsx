@@ -25,6 +25,7 @@ function DashboardPage() {
   const [deposits, setDeposits] = useState(0);
   const [withdrawals, setWithdrawals] = useState(0);
   const [displayName, setDisplayName] = useState("Trader");
+  const [manual, setManual] = useState<{ profit: number | null; withdrawals: number | null; bitcoin: number | null }>({ profit: null, withdrawals: null, bitcoin: null });
   const [live, setLive] = useState<{ rows: LiveRow[]; plans: PlanRow[] }>({ rows: [], plans: [] });
   const [now, setNow] = useState(() => Date.now());
   const btcPrice = useBtcPrice();
@@ -36,7 +37,7 @@ function DashboardPage() {
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
         supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override,entry_btc_price").eq("user_id", user.id),
         supabase.from("investment_plans").select("id,roi_percent,duration_days"),
-        supabase.from("profiles").select("display_name,username").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("display_name,username,manual_profit,manual_withdrawals,manual_bitcoin").eq("user_id", user.id).maybeSingle(),
       ]);
       const rows = ((inv ?? []) as LiveRow[]);
       const active = rows.filter((r) => r.status === "active").reduce((sum, row) => sum + Number(row.amount), 0);
@@ -50,27 +51,34 @@ function DashboardPage() {
       setDeposits((tx ?? []).filter((row) => row.type === "deposit" && row.status === "completed").reduce((sum, row) => sum + Number(row.amount), 0));
       setWithdrawals((tx ?? []).filter((row) => row.type === "withdrawal" && row.status !== "rejected").reduce((sum, row) => sum + Number(row.amount), 0));
       setDisplayName(profile?.display_name || profile?.username || user.email?.split("@")[0] || "Trader");
+      setManual({
+        profit: profile?.manual_profit === null || profile?.manual_profit === undefined ? null : Number(profile.manual_profit),
+        withdrawals: profile?.manual_withdrawals === null || profile?.manual_withdrawals === undefined ? null : Number(profile.manual_withdrawals),
+        bitcoin: profile?.manual_bitcoin === null || profile?.manual_bitcoin === undefined ? null : Number(profile.manual_bitcoin),
+      });
       setLive({ rows, plans: ((pl ?? []) as PlanRow[]) });
     })();
   }, [user.id]);
   const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now, btcPrice), 0);
   const balance = cash - invested + livePl;
-  const totalPl = profit + livePl;
+  const totalPl = manual.profit ?? profit + livePl;
+  const withdrawalsShown = manual.withdrawals ?? withdrawals;
   useEffect(() => {
     const name = sessionStorage.getItem("heroes-welcome");
     if (!name) return;
     setWelcomeName(name);
     sessionStorage.removeItem("heroes-welcome");
   }, []);
-  const btcHolding = btcPrice ? Math.max(0, balance / btcPrice) : 0;
+  const btcHolding = manual.bitcoin ?? (btcPrice ? Math.max(0, balance / btcPrice) : 0);
+  const btcValue = btcPrice ? btcHolding * btcPrice : 0;
   const activePlans = live.rows.filter((row) => row.status === "active").length;
   const metrics = [
     { label: "Balance", value: `${balance < 0 ? "-" : ""}$${Math.abs(balance).toFixed(2)}`, icon: WalletCards, tone: "bg-metric-blue" },
     { label: "Profit / ROI", value: `${totalPl >= 0 ? "+" : "-"}$${Math.abs(totalPl).toFixed(2)}`, icon: TrendingUp, tone: "bg-metric-green" },
     { label: "Invested", value: `$${invested.toFixed(2)}`, icon: Gift, tone: "bg-metric-violet" },
     { label: "Deposits", value: `$${deposits.toFixed(2)}`, icon: ArrowDownToLine, tone: "bg-metric-teal" },
-    { label: "Withdrawals", value: `$${withdrawals.toFixed(2)}`, icon: ArrowUpFromLine, tone: "bg-metric-orange" },
-    { label: "Bitcoin", value: `${btcHolding.toFixed(6)} BTC`, icon: Bitcoin, tone: "bg-metric-gold", note: btcPrice ? `≈ $${Math.max(0, balance).toFixed(2)}` : "Price loading" },
+    { label: "Withdrawals", value: `$${withdrawalsShown.toFixed(2)}`, icon: ArrowUpFromLine, tone: "bg-metric-orange" },
+    { label: "Bitcoin", value: `${btcHolding.toFixed(6)} BTC`, icon: Bitcoin, tone: "bg-metric-gold", note: btcPrice ? `≈ $${btcValue.toFixed(2)}` : "Price loading" },
   ];
   return <AccountShell eyebrow="Control room" title="Account overview">
     {welcomeName && <section className="mb-3 flex items-center justify-between gap-4 rounded-2xl border border-signal/40 bg-signal-soft p-5"><div><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-signal">Account ready</p><h2 className="mt-1 font-head text-xl font-semibold">Welcome to HeroesMarkets, {welcomeName}</h2><p className="mt-1 text-sm text-muted-foreground">Your trading account has been created successfully.</p></div><span className="hidden size-10 place-items-center rounded-xl bg-primary text-primary-foreground sm:grid">✓</span></section>}
