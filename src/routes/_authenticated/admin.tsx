@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Profile = { user_id: string; display_name: string; username: string | null; upgrade_required: boolean; account_on_hold: boolean };
+type Profile = { user_id: string; display_name: string; username: string | null; upgrade_required: boolean; account_on_hold: boolean; manual_profit: number | null; manual_withdrawals: number | null; manual_bitcoin: number | null };
 type Tx = { id: string; user_id: string; type: string; amount: number; status: string; withdrawal_progress: number; withdrawal_paused: boolean; created_at: string };
 type Inv = { id: string; user_id: string; plan_id: string; amount: number; status: string; started_at: string; ends_at: string | null; profit_override: number | null; entry_btc_price: number | null };
 type Plan = { id: string; name: string; roi_percent: number; duration_days: number };
@@ -36,6 +36,7 @@ function AdminPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [balanceDraft, setBalanceDraft] = useState("");
+  const [tileDraft, setTileDraft] = useState({ profit: "", withdrawals: "", bitcoin: "" });
   const [profitDraft, setProfitDraft] = useState<Record<string, string>>({});
   const [withdrawalDraft, setWithdrawalDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -48,7 +49,7 @@ function AdminPage() {
   const load = useCallback(async () => {
     const [{ data: s }, { data: p }, { data: t }, { data: i }, { data: pl }] = await Promise.all([
       supabase.from("site_settings").select("value").eq("key", "btc_address").maybeSingle(),
-      supabase.from("profiles").select("user_id,display_name,username,upgrade_required,account_on_hold"),
+      supabase.from("profiles").select("user_id,display_name,username,upgrade_required,account_on_hold,manual_profit,manual_withdrawals,manual_bitcoin"),
       supabase.from("transactions").select("id,user_id,type,amount,status,withdrawal_progress,withdrawal_paused,created_at"),
       supabase.from("investments").select("id,user_id,plan_id,amount,status,started_at,ends_at,profit_override,entry_btc_price"),
       supabase.from("investment_plans").select("id,name,roi_percent,duration_days").order("sort_order"),
