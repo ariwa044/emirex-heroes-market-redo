@@ -118,6 +118,7 @@ export type Database = {
           manual_withdrawals: number | null
           preferred_currency: string
           updated_at: string
+          upgrade_notice: string | null
           upgrade_required: boolean
           user_id: string
           username: string | null
@@ -133,6 +134,7 @@ export type Database = {
           manual_withdrawals?: number | null
           preferred_currency?: string
           updated_at?: string
+          upgrade_notice?: string | null
           upgrade_required?: boolean
           user_id: string
           username?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           manual_withdrawals?: number | null
           preferred_currency?: string
           updated_at?: string
+          upgrade_notice?: string | null
           upgrade_required?: boolean
           user_id?: string
           username?: string | null
