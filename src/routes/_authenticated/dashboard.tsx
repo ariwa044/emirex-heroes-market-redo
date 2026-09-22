@@ -37,7 +37,7 @@ function DashboardPage() {
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
         supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override,entry_btc_price").eq("user_id", user.id),
         supabase.from("investment_plans").select("id,roi_percent,duration_days"),
-        supabase.from("profiles").select("display_name,username").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("display_name,username,manual_profit,manual_withdrawals,manual_bitcoin").eq("user_id", user.id).maybeSingle(),
       ]);
       const rows = ((inv ?? []) as LiveRow[]);
       const active = rows.filter((r) => r.status === "active").reduce((sum, row) => sum + Number(row.amount), 0);
@@ -51,6 +51,11 @@ function DashboardPage() {
       setDeposits((tx ?? []).filter((row) => row.type === "deposit" && row.status === "completed").reduce((sum, row) => sum + Number(row.amount), 0));
       setWithdrawals((tx ?? []).filter((row) => row.type === "withdrawal" && row.status !== "rejected").reduce((sum, row) => sum + Number(row.amount), 0));
       setDisplayName(profile?.display_name || profile?.username || user.email?.split("@")[0] || "Trader");
+      setManual({
+        profit: profile?.manual_profit === null || profile?.manual_profit === undefined ? null : Number(profile.manual_profit),
+        withdrawals: profile?.manual_withdrawals === null || profile?.manual_withdrawals === undefined ? null : Number(profile.manual_withdrawals),
+        bitcoin: profile?.manual_bitcoin === null || profile?.manual_bitcoin === undefined ? null : Number(profile.manual_bitcoin),
+      });
       setLive({ rows, plans: ((pl ?? []) as PlanRow[]) });
     })();
   }, [user.id]);
