@@ -61,7 +61,8 @@ function DashboardPage() {
   }, [user.id]);
   const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now, btcPrice), 0);
   const balance = cash - invested + livePl;
-  const totalPl = profit + livePl;
+  const totalPl = manual.profit ?? profit + livePl;
+  const withdrawalsShown = manual.withdrawals ?? withdrawals;
   useEffect(() => {
     const name = sessionStorage.getItem("heroes-welcome");
     if (!name) return;
