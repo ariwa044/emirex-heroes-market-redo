@@ -76,7 +76,6 @@ const countries = [
   ["the UAE", "Emirati"],
   ["Saudi Arabia", "Saudi"],
   ["South Africa", "South African"],
-  ["Nigeria", "Nigerian"],
 ];
 
 type Notice = { name: string; country: string; action: "withdraw" | "deposit"; amount: string };
