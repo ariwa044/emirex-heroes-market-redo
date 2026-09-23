@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BarChart3, ChevronRight, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, BanknoteArrowUp, ChevronRight, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 import tradingRoom from "../assets/trading-control-room.jpg";
 import tradingFloorAsset from "../assets/heroes-trading-floor.jpg.asset.json";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,14 @@ const quotes = [
   ["WTI", "$78.40", "+0.19%"],
 ];
 
+const withdrawalNotices = [
+  ["Michael", "$40,000"],
+  ["Jessica", "$12,500"],
+  ["Christopher", "$28,750"],
+  ["Ashley", "$8,200"],
+  ["Daniel", "$55,000"],
+];
+
 const markets = [
   ["FX", "Forex", "72 majors & minors"],
   ["₿", "Crypto", "240 spot & futures pairs"],
@@ -46,6 +55,17 @@ function Brand() {
 }
 
 function Index() {
+  const [noticeIndex, setNoticeIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNoticeIndex((current) => (current + 1) % withdrawalNotices.length);
+    }, 4500);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const notice = withdrawalNotices[noticeIndex] ?? withdrawalNotices[0];
+
   return (
     <div id="top" className="min-h-screen overflow-hidden bg-background font-body text-foreground antialiased">
       <div className="border-b border-border bg-card/60">
@@ -56,6 +76,13 @@ function Index() {
               <em className={change.startsWith("+") ? "not-italic text-positive" : "not-italic text-signal"}>{change}</em>
             </span>
           ))}
+        </div>
+      </div>
+
+      <div className="border-b border-notice/30 bg-notice-soft text-notice" aria-live="polite">
+        <div className="mx-auto flex min-h-11 max-w-[1440px] items-center justify-center gap-2.5 px-4 py-2 text-center text-sm sm:px-6">
+          <BanknoteArrowUp className="size-4 shrink-0" aria-hidden="true" />
+          <p><span className="font-semibold text-foreground">{notice?.[0]}</span> just made a withdrawal of <span className="font-semibold text-foreground">{notice?.[1]}</span></p>
         </div>
       </div>
 

@@ -28,6 +28,8 @@
   --color-signal: var(--signal);
   --color-signal-soft: var(--signal-soft);
   --color-positive: var(--positive);
+  --color-notice: var(--notice);
+  --color-notice-soft: var(--notice-soft);
   --color-metric-blue: var(--metric-blue);
   --color-metric-green: var(--metric-green);
   --color-metric-violet: var(--metric-violet);
@@ -58,6 +60,8 @@
   --signal: oklch(0.611 0.244 26);
   --signal-soft: oklch(0.611 0.244 26 / 0.14);
   --positive: oklch(0.72 0.18 151);
+  --notice: oklch(0.72 0.17 247);
+  --notice-soft: oklch(0.42 0.14 253 / 0.3);
   --metric-blue: oklch(0.58 0.2 257);
   --metric-green: oklch(0.64 0.18 151);
   --metric-violet: oklch(0.59 0.23 300);
