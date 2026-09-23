@@ -28,13 +28,48 @@ const quotes = [
   ["WTI", "$78.40", "+0.19%"],
 ];
 
-const withdrawalNotices = [
-  ["Michael", "$40,000"],
-  ["Jessica", "$12,500"],
-  ["Christopher", "$28,750"],
-  ["Ashley", "$8,200"],
-  ["Daniel", "$55,000"],
+// Large pool of common U.S. first names — used to generate thousands of withdrawal notices.
+const firstNames = [
+  "Michael","Jessica","Christopher","Ashley","Daniel","Matthew","Amanda","Jennifer","David","Sarah",
+  "James","Emily","Robert","Lauren","Andrew","Megan","Joshua","Rachel","Nicholas","Samantha",
+  "Tyler","Hannah","Brandon","Olivia","Jonathan","Victoria","Nathan","Madison","Ethan","Grace",
+  "Justin","Sophia","Anthony","Isabella","Ryan","Natalie","Christian","Elizabeth","Zachary","Alexis",
+  "Kevin","Morgan","Brian","Kayla","Jason","Brianna","Kyle","Allison","Aaron","Maria",
+  "Eric","Jasmine","Steven","Taylor","Jacob","Sydney","Logan","Destiny","Caleb","Brooke",
+  "Dylan","Vanessa","Noah","Alexandra","Connor","Mackenzie","Hunter","Mia","Elijah","Alexa",
+  "Luke","Ava","Mason","Sophie","Owen","Sierra","Isaac","Katelyn","Gavin","Rebecca",
+  "Carter","Diana","Jack","Bella","Hunter","Audrey","Blake","Caroline","Cooper","Mariah",
+  "Tristan","Claire","Wyatt","Peyton","Jeremiah","Faith","Makayla","Autumn","Jocelyn","Brendan",
+  "Sean","Adriana","Cole","Paige","Antonio","Kylie","Jared","Layla","Marcus","Brielle",
+  "Vincent","Camila","Austin","Ariana","Miguel","Bianca","Oscar","Liliana","Diego","Lyla",
+  "Jesus","Zoey","Adrian","Naomi","Ricardo","Rylee","Pablo","Alina","Fernando","Harper",
+  "George","Eleanor","Henry","Vera","Charles","Stella","Frank","Layla","Joe","Lila",
+  "Tom","Eva","Will","Maya","Alex","June","Phil","Aria","Carl","Lena",
+  "Dennis","June","Jerry","Ellie","Louis","Gloria","Ralph","Julia","Roy","Vivian",
+  "Bruce","Hazel","Lawrence","Iris","Eugene","Lena","Wayne","Hazel","Terry","Ivy",
+  "Jean","Gemma","Chris","Mabel","Derek","Cora","Troy","Tara","Wesley","Willa",
+  "Preston","Sofia","Micah","Noelle","Garrett","Presley","Cameron","Sara","Graham","Mira",
+  "Spencer","Daisy","Travis","Ivy","Dustin","Esther","Cody","Miranda","Grant","Blair",
 ];
+
+// Deterministic pseudo-random generator so SSR and client render the same notices.
+function makeNoticePool(count: number): [string, string][] {
+  const pool: [string, string][] = [];
+  let seed = 20260923;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 0xffffffff;
+    return seed / 0xffffffff;
+  };
+  for (let i = 0; i < count; i++) {
+    const name = firstNames[Math.floor(rand() * firstNames.length)];
+    // Random amount between $1,500 and $95,000, rounded to the nearest $50.
+    const amount = Math.round((1500 + rand() * (95000 - 1500)) / 50) * 50;
+    pool.push([name, "$" + amount.toLocaleString("en-US")]);
+  }
+  return pool;
+}
+
+const withdrawalNotices = makeNoticePool(3000);
 
 const markets = [
   ["FX", "Forex", "72 majors & minors"],
