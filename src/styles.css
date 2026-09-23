@@ -84,9 +84,11 @@ a { cursor: pointer; }
 @keyframes ticker { to { transform: translateX(-50%); } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes noticeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.notice-msg { animation: noticeIn .45s ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ticker, .chart-trace, .pulse-dot { animation: none; }
+  .ticker, .chart-trace, .pulse-dot, .notice-msg { animation: none; }
   .chart-trace { stroke-dashoffset: 0; }
 }
