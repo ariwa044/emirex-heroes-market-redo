@@ -146,20 +146,22 @@ function Index() {
         </div>
       </div>
 
-      <aside className="notice-pill fixed right-3 top-1/2 z-40 w-[min(80vw,15rem)] -translate-y-1/2 rounded-xl border border-notice/40 bg-notice-soft/95 p-3.5 text-notice shadow-lg backdrop-blur-sm sm:right-5" aria-live="polite">
+      <aside className="notice-pill fixed right-3 top-1/2 z-40 w-[min(86vw,18rem)] -translate-y-1/2 rounded-xl border border-notice/40 bg-notice-soft/95 p-4 text-notice shadow-lg backdrop-blur-sm sm:right-5" aria-live="polite">
         <div className="flex items-center gap-2 border-b border-notice/25 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
           <BanknoteArrowUp className="size-3.5 shrink-0" aria-hidden="true" />
-          Withdrawal
+          {isDeposit ? "Deposit" : "Withdrawal"}
         </div>
-        <div className="notice-face mt-2.5">
-          <p key={noticeIndex} className="notice-msg text-sm leading-5">
-            <span className="font-semibold text-foreground">{notice?.[0]}</span>
+        <div className="notice-face mt-3">
+          <p key={noticeIndex} className="notice-msg text-sm leading-6">
+            <span className="font-semibold text-foreground">{notice?.name}</span>
             <br />
-            just made a withdrawal of{" "}
-            <span className="font-semibold text-foreground">{notice?.[1]}</span>
+            from <span className="font-semibold text-foreground">{notice?.country}</span>
+            <br />
+            just {isDeposit ? "deposited" : "withdrew"}{" "}
+            <span className="font-head text-lg font-bold text-foreground">{notice?.amount}</span>
           </p>
         </div>
-        <div className="mt-2.5 flex items-center gap-1.5">
+        <div className="mt-3 flex items-center gap-1.5">
           {[0, 1, 2, 3, 4].map((i) => (
             <span key={i} className={`h-1 flex-1 rounded-full ${i === noticeIndex % 5 ? "bg-notice" : "bg-notice/30"}`} />
           ))}
