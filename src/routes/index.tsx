@@ -91,7 +91,7 @@ function makeNoticePool(count: number): Notice[] {
   };
   for (let i = 0; i < count; i++) {
     const name = firstNames[Math.floor(rand() * firstNames.length)] ?? "Michael";
-    const [country] = countries[Math.floor(rand() * countries.length)] ?? ["the USA"];
+    const country = countries[Math.floor(rand() * countries.length)]?.[0] ?? "the USA";
     const action: Notice["action"] = rand() < 0.5 ? "withdraw" : "deposit";
     // Random amount between $5,000 and $500,000, rounded to the nearest $500.
     const amount = Math.round((5000 + rand() * (500000 - 5000)) / 500) * 500;
