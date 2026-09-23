@@ -79,12 +79,25 @@ function Index() {
         </div>
       </div>
 
-      <div className="border-b border-notice/30 bg-notice-soft text-notice" aria-live="polite">
-        <div className="mx-auto flex min-h-11 max-w-[1440px] items-center justify-center gap-2.5 px-4 py-2 text-center text-sm sm:px-6">
-          <BanknoteArrowUp className="size-4 shrink-0" aria-hidden="true" />
-          <p><span className="font-semibold text-foreground">{notice?.[0]}</span> just made a withdrawal of <span className="font-semibold text-foreground">{notice?.[1]}</span></p>
+      <aside className="notice-pill fixed right-3 top-1/2 z-40 w-[min(80vw,15rem)] -translate-y-1/2 rounded-xl border border-notice/40 bg-notice-soft/95 p-3.5 text-notice shadow-lg backdrop-blur-sm sm:right-5" aria-live="polite">
+        <div className="flex items-center gap-2 border-b border-notice/25 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
+          <BanknoteArrowUp className="size-3.5 shrink-0" aria-hidden="true" />
+          Withdrawal
         </div>
-      </div>
+        <div className="notice-face mt-2.5">
+          <p key={noticeIndex} className="notice-msg text-sm leading-5">
+            <span className="font-semibold text-foreground">{notice?.[0]}</span>
+            <br />
+            just made a withdrawal of{" "}
+            <span className="font-semibold text-foreground">{notice?.[1]}</span>
+          </p>
+        </div>
+        <div className="mt-2.5 flex items-center gap-1.5">
+          {withdrawalNotices.map((_, i) => (
+            <span key={i} className={`h-1 flex-1 rounded-full ${i === noticeIndex ? "bg-notice" : "bg-notice/30"}`} />
+          ))}
+        </div>
+      </aside>
 
       <header className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-4 sm:px-6">
         <Brand />
