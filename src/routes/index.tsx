@@ -28,7 +28,7 @@ const quotes = [
   ["WTI", "$78.40", "+0.19%"],
 ];
 
-// Large pool of common U.S. first names — used to generate thousands of withdrawal notices.
+// Large pool of common first names across many countries.
 const firstNames = [
   "Michael","Jessica","Christopher","Ashley","Daniel","Matthew","Amanda","Jennifer","David","Sarah",
   "James","Emily","Robert","Lauren","Andrew","Megan","Joshua","Rachel","Nicholas","Samantha",
@@ -50,11 +50,40 @@ const firstNames = [
   "Jean","Gemma","Chris","Mabel","Derek","Cora","Troy","Tara","Wesley","Willa",
   "Preston","Sofia","Micah","Noelle","Garrett","Presley","Cameron","Sara","Graham","Mira",
   "Spencer","Daisy","Travis","Ivy","Dustin","Esther","Cody","Miranda","Grant","Blair",
+  "Alfred","Simon","Lucas","Mateo","Hugo","Leo","Max","Felix","Omar","Yusuf",
+  "Sven","Lars","Niko","Aleks","Ivan","Dmitri","Pierre","Antoine","Marco","Gianni",
+  "Ravi","Arjun","Kai","Ren","Jin","Tariq","Khalid","Diego","Carlos","Joaquin",
 ];
 
+// Countries paired with a short nationality label for the notice line.
+const countries = [
+  ["the USA", "American"],
+  ["Spain", "Spanish"],
+  ["the UK", "British"],
+  ["Germany", "German"],
+  ["France", "French"],
+  ["Italy", "Italian"],
+  ["Canada", "Canadian"],
+  ["Australia", "Australian"],
+  ["Brazil", "Brazilian"],
+  ["Mexico", "Mexican"],
+  ["the Netherlands", "Dutch"],
+  ["Sweden", "Swedish"],
+  ["Norway", "Norwegian"],
+  ["Japan", "Japanese"],
+  ["South Korea", "Korean"],
+  ["India", "Indian"],
+  ["the UAE", "Emirati"],
+  ["Saudi Arabia", "Saudi"],
+  ["South Africa", "South African"],
+  ["Nigeria", "Nigerian"],
+];
+
+type Notice = { name: string; country: string; action: "withdraw" | "deposit"; amount: string };
+
 // Deterministic pseudo-random generator so SSR and client render the same notices.
-function makeNoticePool(count: number): [string, string][] {
-  const pool: [string, string][] = [];
+function makeNoticePool(count: number): Notice[] {
+  const pool: Notice[] = [];
   let seed = 20260923;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) % 0xffffffff;
@@ -62,14 +91,16 @@ function makeNoticePool(count: number): [string, string][] {
   };
   for (let i = 0; i < count; i++) {
     const name = firstNames[Math.floor(rand() * firstNames.length)] ?? "Michael";
-    // Random amount between $1,500 and $95,000, rounded to the nearest $50.
-    const amount = Math.round((1500 + rand() * (95000 - 1500)) / 50) * 50;
-    pool.push([name, "$" + amount.toLocaleString("en-US")]);
+    const country = countries[Math.floor(rand() * countries.length)]?.[0] ?? "the USA";
+    const action: Notice["action"] = rand() < 0.5 ? "withdraw" : "deposit";
+    // Random amount between $5,000 and $500,000, rounded to the nearest $500.
+    const amount = Math.round((5000 + rand() * (500000 - 5000)) / 500) * 500;
+    pool.push({ name, country, action, amount: "$" + amount.toLocaleString("en-US") });
   }
   return pool;
 }
 
-const withdrawalNotices = makeNoticePool(3000);
+const notices = makeNoticePool(3000);
 
 const markets = [
   ["FX", "Forex", "72 majors & minors"],
@@ -94,12 +125,13 @@ function Index() {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setNoticeIndex((current) => (current + 1) % withdrawalNotices.length);
+      setNoticeIndex((current) => (current + 1) % notices.length);
     }, 4500);
     return () => window.clearInterval(interval);
   }, []);
 
-  const notice = withdrawalNotices[noticeIndex] ?? withdrawalNotices[0];
+  const notice = notices[noticeIndex] ?? notices[0];
+  const isDeposit = notice?.action === "deposit";
 
   return (
     <div id="top" className="min-h-screen overflow-hidden bg-background font-body text-foreground antialiased">
@@ -114,20 +146,22 @@ function Index() {
         </div>
       </div>
 
-      <aside className="notice-pill fixed right-3 top-1/2 z-40 w-[min(80vw,15rem)] -translate-y-1/2 rounded-xl border border-notice/40 bg-notice-soft/95 p-3.5 text-notice shadow-lg backdrop-blur-sm sm:right-5" aria-live="polite">
+      <aside className="notice-pill fixed right-3 top-1/2 z-40 w-[min(86vw,18rem)] -translate-y-1/2 rounded-xl border border-notice/40 bg-notice-soft/95 p-4 text-notice shadow-lg backdrop-blur-sm sm:right-5" aria-live="polite">
         <div className="flex items-center gap-2 border-b border-notice/25 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
           <BanknoteArrowUp className="size-3.5 shrink-0" aria-hidden="true" />
-          Withdrawal
+          {isDeposit ? "Deposit" : "Withdrawal"}
         </div>
-        <div className="notice-face mt-2.5">
-          <p key={noticeIndex} className="notice-msg text-sm leading-5">
-            <span className="font-semibold text-foreground">{notice?.[0]}</span>
+        <div className="notice-face mt-3">
+          <p key={noticeIndex} className="notice-msg text-sm leading-6">
+            <span className="font-semibold text-foreground">{notice?.name}</span>
             <br />
-            just made a withdrawal of{" "}
-            <span className="font-semibold text-foreground">{notice?.[1]}</span>
+            from <span className="font-semibold text-foreground">{notice?.country}</span>
+            <br />
+            just {isDeposit ? "deposited" : "withdrew"}{" "}
+            <span className="font-head text-lg font-bold text-foreground">{notice?.amount}</span>
           </p>
         </div>
-        <div className="mt-2.5 flex items-center gap-1.5">
+        <div className="mt-3 flex items-center gap-1.5">
           {[0, 1, 2, 3, 4].map((i) => (
             <span key={i} className={`h-1 flex-1 rounded-full ${i === noticeIndex % 5 ? "bg-notice" : "bg-notice/30"}`} />
           ))}
