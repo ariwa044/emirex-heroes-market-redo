@@ -128,8 +128,8 @@ function Index() {
           </p>
         </div>
         <div className="mt-2.5 flex items-center gap-1.5">
-          {withdrawalNotices.map((_, i) => (
-            <span key={i} className={`h-1 flex-1 rounded-full ${i === noticeIndex ? "bg-notice" : "bg-notice/30"}`} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <span key={i} className={`h-1 flex-1 rounded-full ${i === noticeIndex % 5 ? "bg-notice" : "bg-notice/30"}`} />
           ))}
         </div>
       </aside>
