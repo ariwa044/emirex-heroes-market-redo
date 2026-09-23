@@ -61,7 +61,7 @@ function makeNoticePool(count: number): [string, string][] {
     return seed / 0xffffffff;
   };
   for (let i = 0; i < count; i++) {
-    const name = firstNames[Math.floor(rand() * firstNames.length)];
+    const name = firstNames[Math.floor(rand() * firstNames.length)] ?? "Michael";
     // Random amount between $1,500 and $95,000, rounded to the nearest $50.
     const amount = Math.round((1500 + rand() * (95000 - 1500)) / 50) * 50;
     pool.push([name, "$" + amount.toLocaleString("en-US")]);
