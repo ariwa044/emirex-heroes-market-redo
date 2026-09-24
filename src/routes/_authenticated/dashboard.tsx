@@ -60,7 +60,8 @@ function DashboardPage() {
     })();
   }, [user.id]);
   const livePl = live.rows.reduce((sum, row) => sum + accruedProfit(row, live.plans.find((p) => p.id === row.plan_id), now, btcPrice), 0);
-  const balance = cash - invested + livePl;
+  const balance = manual.balance ?? cash - invested + livePl;
+  const investedShown = manual.invested ?? invested;
   const totalPl = manual.profit ?? profit + livePl;
   const withdrawalsShown = manual.withdrawals ?? withdrawals;
   useEffect(() => {

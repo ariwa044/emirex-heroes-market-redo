@@ -344,6 +344,14 @@ function AdminPage() {
       <p className="mt-2 text-sm text-muted-foreground">Type a value to show it on this member&apos;s dashboard. Leave a box empty to keep what is there now.</p>
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <div className="space-y-2">
+          <Label htmlFor={`mbal-${selected.user_id}`}>Balance (USD)</Label>
+          <Input id={`mbal-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_balance === null ? "automatic" : String(selected.manual_balance)} value={tileDraft.balance} onChange={(e) => setTileDraft((d) => ({ ...d, balance: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`minv-${selected.user_id}`}>Invested (USD)</Label>
+          <Input id={`minv-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_invested === null ? "automatic" : String(selected.manual_invested)} value={tileDraft.invested} onChange={(e) => setTileDraft((d) => ({ ...d, invested: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor={`mp-${selected.user_id}`}>Profit / ROI (USD)</Label>
           <Input id={`mp-${selected.user_id}`} inputMode="decimal" placeholder={selected.manual_profit === null ? "automatic" : String(selected.manual_profit)} value={tileDraft.profit} onChange={(e) => setTileDraft((d) => ({ ...d, profit: e.target.value }))} />
         </div>
