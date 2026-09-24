@@ -30,6 +30,7 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   async function ensureProfile(user: { id: string; user_metadata?: Record<string, unknown> }) {
     const metadata = user.user_metadata ?? {};
