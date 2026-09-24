@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS manual_balance numeric, ADD COLUMN IF NOT EXISTS manual_invested numeric;
