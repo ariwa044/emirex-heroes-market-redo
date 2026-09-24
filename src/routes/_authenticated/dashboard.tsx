@@ -55,6 +55,8 @@ function DashboardPage() {
         profit: profile?.manual_profit === null || profile?.manual_profit === undefined ? null : Number(profile.manual_profit),
         withdrawals: profile?.manual_withdrawals === null || profile?.manual_withdrawals === undefined ? null : Number(profile.manual_withdrawals),
         bitcoin: profile?.manual_bitcoin === null || profile?.manual_bitcoin === undefined ? null : Number(profile.manual_bitcoin),
+        balance: profile?.manual_balance == null ? null : Number(profile.manual_balance),
+        invested: profile?.manual_invested == null ? null : Number(profile.manual_invested),
       });
       setLive({ rows, plans: ((pl ?? []) as PlanRow[]) });
     })();
