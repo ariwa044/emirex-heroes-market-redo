@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, BanknoteArrowUp, ChevronRight, LockKeyhole, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import tradingRoom from "../assets/trading-control-room.jpg";
-import tradingFloorAsset from "../assets/heroes-trading-floor.jpg.asset.json";
+import tradingFloor from "../assets/busy-trading-floor-stockcake.jpg";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -185,7 +185,7 @@ function Index() {
         <div className="grid grid-cols-12 gap-3">
           <section id="platform" className="col-span-12 overflow-hidden rounded-2xl border border-border bg-card">
             <div className="relative h-[260px] sm:h-[360px] lg:h-[430px]">
-              <img src={tradingFloorAsset.url} alt="Professional traders monitoring global markets" width={1320} height={640} className="h-full w-full object-cover" />
+              <img src={tradingFloor} alt="Professional traders monitoring global markets" width={1320} height={640} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/15 to-transparent" />
               <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-md border border-border bg-background/80 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-signal backdrop-blur-sm">
                 <span className="pulse-dot size-1.5 rounded-full bg-signal" /> Live market access
