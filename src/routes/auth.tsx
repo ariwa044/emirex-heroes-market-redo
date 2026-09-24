@@ -117,7 +117,19 @@ function AuthPage() {
               <div className="space-y-2"><Label htmlFor="username">Username</Label><Input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} maxLength={30} pattern="[A-Za-z0-9_.]+" placeholder="alex.morgan" className="h-11" /></div>
             </>}
             <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" autoComplete="email" maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="trader@example.com" className="h-11" /></div>
-            <div className="space-y-2"><Label htmlFor="password">Password</Label><div className="relative"><Input id="password" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required className="h-11 pr-11" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff /> : <Eye />}</Button></div></div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === "login" && <button type="button" className="text-xs font-semibold text-signal hover:underline" onClick={() => setShowForgot((value) => !value)}>Forgot password?</button>}
+              </div>
+              <div className="relative"><Input id="password" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required className="h-11 pr-11" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff /> : <Eye />}</Button></div>
+            </div>
+            {mode === "login" && showForgot && (
+              <div className="rounded-lg border border-notice/40 bg-notice-soft p-3 text-sm text-notice" role="status">
+                <p className="font-semibold">Need help signing in?</p>
+                <p className="mt-1 text-notice/90">To regain access to your account, please contact customer support through the live chat on this page. Our team will verify your identity and help you reset your password.</p>
+              </div>
+            )}
             {message && <p className="rounded-lg border border-border bg-background/40 p-3 text-sm text-muted-foreground" role="status">{message}</p>}
             <Button className="h-11 w-full" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Log in" : "Create account"}</Button>
           </form>
