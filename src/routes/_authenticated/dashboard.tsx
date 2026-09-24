@@ -37,7 +37,7 @@ function DashboardPage() {
         supabase.from("transactions").select("type,amount,status").eq("user_id", user.id),
         supabase.from("investments").select("amount,status,started_at,ends_at,plan_id,profit_override,entry_btc_price").eq("user_id", user.id),
         supabase.from("investment_plans").select("id,roi_percent,duration_days"),
-        supabase.from("profiles").select("display_name,username,manual_profit,manual_withdrawals,manual_bitcoin").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("display_name,username,manual_profit,manual_withdrawals,manual_bitcoin,manual_balance,manual_invested").eq("user_id", user.id).maybeSingle(),
       ]);
       const rows = ((inv ?? []) as LiveRow[]);
       const active = rows.filter((r) => r.status === "active").reduce((sum, row) => sum + Number(row.amount), 0);
@@ -78,7 +78,7 @@ function DashboardPage() {
   const metrics = [
     { label: "Balance", value: `${balance < 0 ? "-" : ""}$${Math.abs(balance).toFixed(2)}`, icon: WalletCards, tone: "bg-metric-blue" },
     { label: "Profit / ROI", value: `${totalPl >= 0 ? "+" : "-"}$${Math.abs(totalPl).toFixed(2)}`, icon: TrendingUp, tone: "bg-metric-green" },
-    { label: "Invested", value: `$${invested.toFixed(2)}`, icon: Gift, tone: "bg-metric-violet" },
+    { label: "Invested", value: `$${investedShown.toFixed(2)}`, icon: Gift, tone: "bg-metric-violet" },
     { label: "Deposits", value: `$${deposits.toFixed(2)}`, icon: ArrowDownToLine, tone: "bg-metric-teal" },
     { label: "Withdrawals", value: `$${withdrawalsShown.toFixed(2)}`, icon: ArrowUpFromLine, tone: "bg-metric-orange" },
     { label: "Bitcoin", value: `${btcHolding.toFixed(6)} BTC`, icon: Bitcoin, tone: "bg-metric-gold", note: btcPrice ? `≈ $${btcValue.toFixed(2)}` : "Price loading" },
