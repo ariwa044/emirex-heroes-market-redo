@@ -25,7 +25,7 @@ function DashboardPage() {
   const [deposits, setDeposits] = useState(0);
   const [withdrawals, setWithdrawals] = useState(0);
   const [displayName, setDisplayName] = useState("Trader");
-  const [manual, setManual] = useState<{ profit: number | null; withdrawals: number | null; bitcoin: number | null }>({ profit: null, withdrawals: null, bitcoin: null });
+  const [manual, setManual] = useState<{ profit: number | null; withdrawals: number | null; bitcoin: number | null; balance: number | null; invested: number | null }>({ profit: null, withdrawals: null, bitcoin: null, balance: null, invested: null });
   const [live, setLive] = useState<{ rows: LiveRow[]; plans: PlanRow[] }>({ rows: [], plans: [] });
   const [now, setNow] = useState(() => Date.now());
   const btcPrice = useBtcPrice();
